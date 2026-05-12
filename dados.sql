@@ -1,5 +1,3 @@
---database: ./db.sqlite
-
 SET search_path TO oficina;
 
 -- Desativa triggers temporariamente para performance na carga

@@ -1,5 +1,3 @@
---database: ./db.sqlite
-
 -- Remove o schema se já existir (idempotência)
 DROP SCHEMA IF EXISTS oficina CASCADE;
 
