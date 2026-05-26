@@ -1,0 +1,16 @@
+.btn-oficina {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: 14px;
+}
+
+/* Variações de cores usando classes do CSS */
+.btn-oficina.azul { background-color: #1a73e8; color: white; }
+.btn-oficina.azul:hover { background-color: #1557b0; }
+
+.btn-oficina.cinza { background-color: #fff; color: #555; border: 1px solid #ccc; }
+.btn-oficina.cinza:hover { background-color: #f5f5f5; }

@@ -1,0 +1,103 @@
+.agendamentos-container {
+  min-height: 100vh;
+  background-color: #f4f6f9;
+  padding: 30px;
+  font-family: sans-serif;
+}
+
+.agendamentos-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.header-titulo h2 {
+  margin: 0 0 5px 0;
+  color: #333;
+}
+
+.header-titulo p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.btn-novo-agendamento {
+  padding: 12px 20px;
+  background-color: #1a73e8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s;
+}
+
+.btn-novo-agendamento:hover {
+  background-color: #1557b0;
+}
+
+/* Tabela e Card */
+.tabela-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  max-width: 1000px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.tabela-os {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.tabela-os th {
+  background-color: #f8f9fa;
+  color: #555;
+  padding: 15px;
+  font-weight: 600;
+  border-bottom: 2px solid #eee;
+}
+
+.tabela-os td {
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+  color: #333;
+}
+
+.tabela-os tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Badges de Status */
+.badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  display: inline-block;
+}
+
+.badge.andamento {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.badge.concluido {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.badge.agendado {
+  background-color: #cce5ff;
+  color: #004085;
+}
