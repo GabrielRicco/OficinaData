@@ -115,7 +115,7 @@ SELECT
     quantidade_estoque,
     quantidade_minima,
     (quantidade_minima - quantidade_estoque) AS deficit,
-    NULL AS fornecedor
+    fornecedor
 FROM peca
 WHERE quantidade_estoque < quantidade_minima
 ORDER BY deficit DESC;
