@@ -1,40 +1,37 @@
--- Remove o schema se já existir (idempotência)
 DROP SCHEMA IF EXISTS oficina CASCADE;
 
--- Cria o schema
 CREATE SCHEMA oficina;
 
--- Define o schema como padrão da sessão
 SET search_path TO oficina;
 
 
 -- CRIAÇÃO DE DOMÍNIOS
--- CPF: 11 dígitos numéricos
+DROP DOMAIN IF EXISTS cpf_dom CASCADE;
 CREATE DOMAIN cpf_dom AS VARCHAR(11)
 CHECK (VALUE ~ '^[0-9]{11}$');
 
--- CNPJ: 14 dígitos numéricos
+DROP DOMAIN IF EXISTS cnpj_dom CASCADE;
 CREATE DOMAIN cnpj_dom AS VARCHAR(14)
 CHECK (VALUE ~ '^[0-9]{14}$');
 
--- Email
+DROP DOMAIN IF EXISTS email_dom CASCADE;
 CREATE DOMAIN email_dom AS TEXT
 CHECK (VALUE ~ '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$');
 
--- Telefone (formato flexível: só números, 10 a 11 dígitos)
+DROP DOMAIN IF EXISTS telefone_dom CASCADE;
 CREATE DOMAIN telefone_dom AS VARCHAR(11)
 CHECK (VALUE ~ '^[0-9]{10,11}$');
 
--- Placa Mercosul (ABC1D23) ou antiga (ABC1234)
+DROP DOMAIN IF EXISTS placa_dom CASCADE;
 CREATE DOMAIN placa_dom AS VARCHAR(7)
 CHECK (VALUE ~ '^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$');
 
--- Valores monetários (nunca usar FLOAT)
+DROP DOMAIN IF EXISTS dinheiro_dom CASCADE;
 CREATE DOMAIN dinheiro_dom AS NUMERIC(10,2)
 CHECK (VALUE >= 0);
 
 
---CRIAÇÃO DAS TABELAS
+-- CRIAÇÃO DAS TABELAS
 DROP TABLE IF EXISTS cliente CASCADE;
 
 CREATE TABLE cliente (
@@ -45,14 +42,12 @@ CREATE TABLE cliente (
     email email_dom NOT NULL UNIQUE,
 
     telefone telefone_dom,
-   
-    -- Pessoa Física ou Jurídica
+
     cpf cpf_dom UNIQUE,
     cnpj cnpj_dom UNIQUE,
 
     data_cadastro TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
-    -- Regra: PF tem CPF e não tem CNPJ | PJ tem CNPJ e não tem CPF
     CONSTRAINT chk_tipo_cliente CHECK (
         (cpf IS NOT NULL AND cnpj IS NULL)
         OR
@@ -92,7 +87,8 @@ DROP TABLE IF EXISTS tipo_servico CASCADE;
 CREATE TABLE tipo_servico (
     id_tipo_servico SERIAL PRIMARY KEY,
     descricao TEXT NOT NULL,
-    preco_base dinheiro_dom NOT NULL
+    preco_base dinheiro_dom NOT NULL,
+    tempo_estimado_min INT NOT NULL CHECK (tempo_estimado_min > 0)
 );
 
 
@@ -101,6 +97,7 @@ DROP TABLE IF EXISTS peca CASCADE;
 CREATE TABLE peca (
     id_peca SERIAL PRIMARY KEY,
     nome TEXT NOT NULL,
+    fornecedor TEXT NOT NULL,
     preco_unitario dinheiro_dom NOT NULL,
 
     quantidade_estoque INT NOT NULL CHECK (quantidade_estoque >= 0),
@@ -117,12 +114,11 @@ CREATE TABLE agendamento (
     data_abertura TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     data_conclusao TIMESTAMPTZ,
 
-    status TEXT NOT NULL CHECK (status IN ('Aberto', 'Em andamento', 'Concluido')),
+    status TEXT NOT NULL CHECK (status IN ('Agendado', 'Em andamento', 'Concluído', 'Cancelado', 'No-show')),
 
     km_entrada INT NOT NULL CHECK (km_entrada >= 0),
     km_saida INT,
 
-    -- totais (calculados depois via trigger)
     total_servicos dinheiro_dom DEFAULT 0,
     total_pecas dinheiro_dom DEFAULT 0,
 
@@ -198,3 +194,150 @@ CREATE TABLE avaliacao (
 
     data_avaliacao TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
+
+
+-- FUNÇÕES E TRIGGERS
+DROP FUNCTION IF EXISTS oficina.fn_recalcula_total_servicos() CASCADE;
+
+CREATE OR REPLACE FUNCTION oficina.fn_recalcula_total_servicos()
+RETURNS TRIGGER AS $$
+BEGIN
+    SET search_path TO oficina;
+
+    IF TG_OP IN ('INSERT', 'UPDATE') THEN
+        UPDATE oficina.agendamento
+        SET total_servicos = COALESCE((
+            SELECT SUM(total)
+            FROM oficina.item_servico
+            WHERE id_agendamento = NEW.id_agendamento
+        ), 0)
+        WHERE id_agendamento = NEW.id_agendamento;
+    END IF;
+
+    IF TG_OP IN ('UPDATE', 'DELETE') THEN
+        IF TG_OP = 'DELETE' OR NEW.id_agendamento <> OLD.id_agendamento THEN
+            UPDATE oficina.agendamento
+            SET total_servicos = COALESCE((
+                SELECT SUM(total)
+                FROM oficina.item_servico
+                WHERE id_agendamento = OLD.id_agendamento
+            ), 0)
+            WHERE id_agendamento = OLD.id_agendamento;
+        END IF;
+    END IF;
+
+    IF TG_OP = 'DELETE' THEN
+        RETURN OLD;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_item_servico_aiud_total ON oficina.item_servico;
+
+CREATE TRIGGER trg_item_servico_aiud_total
+AFTER INSERT OR UPDATE OR DELETE ON oficina.item_servico
+FOR EACH ROW
+EXECUTE FUNCTION oficina.fn_recalcula_total_servicos();
+
+
+DROP FUNCTION IF EXISTS oficina.fn_recalcula_total_pecas() CASCADE;
+
+CREATE OR REPLACE FUNCTION oficina.fn_recalcula_total_pecas()
+RETURNS TRIGGER AS $$
+BEGIN
+    SET search_path TO oficina;
+
+    IF TG_OP IN ('INSERT', 'UPDATE') THEN
+        UPDATE oficina.agendamento
+        SET total_pecas = COALESCE((
+            SELECT SUM(total)
+            FROM oficina.item_peca
+            WHERE id_agendamento = NEW.id_agendamento
+        ), 0)
+        WHERE id_agendamento = NEW.id_agendamento;
+    END IF;
+
+    IF TG_OP IN ('UPDATE', 'DELETE') THEN
+        IF TG_OP = 'DELETE' OR NEW.id_agendamento <> OLD.id_agendamento THEN
+            UPDATE oficina.agendamento
+            SET total_pecas = COALESCE((
+                SELECT SUM(total)
+                FROM oficina.item_peca
+                WHERE id_agendamento = OLD.id_agendamento
+            ), 0)
+            WHERE id_agendamento = OLD.id_agendamento;
+        END IF;
+    END IF;
+
+    IF TG_OP = 'DELETE' THEN
+        RETURN OLD;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_item_peca_aiud_total ON oficina.item_peca;
+
+CREATE TRIGGER trg_item_peca_aiud_total
+AFTER INSERT OR UPDATE OR DELETE ON oficina.item_peca
+FOR EACH ROW
+EXECUTE FUNCTION oficina.fn_recalcula_total_pecas();
+
+
+DROP FUNCTION IF EXISTS oficina.fn_valida_pagamento_status() CASCADE;
+
+CREATE OR REPLACE FUNCTION oficina.fn_valida_pagamento_status()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_status TEXT;
+BEGIN
+    SET search_path TO oficina;
+
+    SELECT status INTO v_status
+    FROM oficina.agendamento
+    WHERE id_agendamento = NEW.id_agendamento;
+
+    IF v_status IS DISTINCT FROM 'Concluído' THEN
+        RAISE EXCEPTION 'Pagamento só é permitido para agendamentos com status Concluído (status atual: %)', v_status;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_pagamento_biu_status ON oficina.pagamento;
+
+CREATE TRIGGER trg_pagamento_biu_status
+BEFORE INSERT OR UPDATE ON oficina.pagamento
+FOR EACH ROW
+EXECUTE FUNCTION oficina.fn_valida_pagamento_status();
+
+
+DROP FUNCTION IF EXISTS oficina.fn_valida_avaliacao_status() CASCADE;
+
+CREATE OR REPLACE FUNCTION oficina.fn_valida_avaliacao_status()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_status TEXT;
+BEGIN
+    SET search_path TO oficina;
+
+    SELECT status INTO v_status
+    FROM oficina.agendamento
+    WHERE id_agendamento = NEW.id_agendamento;
+
+    IF v_status IS DISTINCT FROM 'Concluído' THEN
+        RAISE EXCEPTION 'Avaliação só é permitida para agendamentos com status Concluído (status atual: %)', v_status;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_avaliacao_biu_status ON oficina.avaliacao;
+
+CREATE TRIGGER trg_avaliacao_biu_status
+BEFORE INSERT OR UPDATE ON oficina.avaliacao
+FOR EACH ROW
+EXECUTE FUNCTION oficina.fn_valida_avaliacao_status();
