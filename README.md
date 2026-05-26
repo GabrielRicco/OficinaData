@@ -8,12 +8,11 @@ Projeto desenvolvido conforme o enunciado v4 da disciplina. No momento, o reposi
 
 ## Equipe
 
-| Integrante | Matrícula | Responsabilidade principal |
-|---|---|---|
-| [Nome 1] | [Matrícula] | Modelo lógico e DDL |
-| [Nome 2] | [Matrícula] | Carga e consultas |
-| [Nome 3] | [Matrícula] | EXPLAIN ANALYZE e otimização |
-| [Nome 4] | [Matrícula] | Aplicação MVC REST (Entrega 6) |
+| Integrante | Matrícula |
+|---|---|
+| [Gabriel Ricco] | [2024B010874] |
+| [Caroline] | [2024b010635] | 
+| [Paulo Roberto] | [2024b010858] |
 
 ---
 
