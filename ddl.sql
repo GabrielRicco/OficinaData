@@ -196,6 +196,26 @@ CREATE TABLE avaliacao (
 );
 
 
+-- USUÁRIOS DO SISTEMA (autenticação JWT — separado das entidades de negócio)
+DROP TABLE IF EXISTS usuario CASCADE;
+
+CREATE TABLE usuario (
+    id_usuario SERIAL PRIMARY KEY,
+
+    nome TEXT NOT NULL,
+
+    email email_dom NOT NULL UNIQUE,
+
+    senha_hash TEXT NOT NULL,
+
+    perfil TEXT NOT NULL CHECK (perfil IN ('Atendente', 'Gerente')),
+
+    ativo BOOLEAN NOT NULL DEFAULT TRUE,
+
+    data_criacao TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+
 -- FUNÇÕES E TRIGGERS
 DROP FUNCTION IF EXISTS oficina.fn_recalcula_total_servicos() CASCADE;
 

@@ -274,6 +274,17 @@ ORDER BY a.id_agendamento
 LIMIT 2200;
 
 -- ============================================================
+-- 12. USUÁRIOS DO SISTEMA
+-- ============================================================
+INSERT INTO usuario (nome, email, senha_hash, perfil) VALUES
+    ('Administrador',     'admin@oficina.local',     '$2a$10$placeholderhashplaceholderhashplaceholderhashplaceholder1', 'Gerente'),
+    ('Gerente Geral',     'gerente@oficina.local',   '$2a$10$placeholderhashplaceholderhashplaceholderhashplaceholder2', 'Gerente'),
+    ('Atendente Manhã',   'atendente1@oficina.local','$2a$10$placeholderhashplaceholderhashplaceholderhashplaceholder3', 'Atendente'),
+    ('Atendente Tarde',   'atendente2@oficina.local','$2a$10$placeholderhashplaceholderhashplaceholderhashplaceholder4', 'Atendente'),
+    ('Atendente Noite',   'atendente3@oficina.local','$2a$10$placeholderhashplaceholderhashplaceholderhashplaceholder5', 'Atendente'),
+    ('Recepção',          'recepcao@oficina.local',  '$2a$10$placeholderhashplaceholderhashplaceholderhashplaceholder6', 'Atendente');
+
+-- ============================================================
 -- Reativa triggers para uso normal do sistema
 -- ============================================================
 SET session_replication_role = DEFAULT;
