@@ -1,11 +1,32 @@
--- explain_queries.sql
--- Script com EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT) para as 8 consultas exigidas.
--- Execute em um cliente PostgreSQL conectado ao schema oficina.
-
 SET search_path TO oficina;
 
--- Consulta 1: Contagem de registros por tabela
 ANALYZE;
+
+\echo '=== Q1 RUN 1 ==='
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
+SELECT 'cliente' AS tabela, COUNT(*) AS qtd FROM cliente
+UNION ALL SELECT 'veiculo', COUNT(*) FROM veiculo
+UNION ALL SELECT 'funcionario', COUNT(*) FROM funcionario
+UNION ALL SELECT 'tipo_servico', COUNT(*) FROM tipo_servico
+UNION ALL SELECT 'peca', COUNT(*) FROM peca
+UNION ALL SELECT 'agendamento', COUNT(*) FROM agendamento
+UNION ALL SELECT 'item_servico', COUNT(*) FROM item_servico
+UNION ALL SELECT 'item_peca', COUNT(*) FROM item_peca
+UNION ALL SELECT 'pagamento', COUNT(*) FROM pagamento
+UNION ALL SELECT 'avaliacao', COUNT(*) FROM avaliacao;
+\echo '=== Q1 RUN 2 ==='
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
+SELECT 'cliente' AS tabela, COUNT(*) AS qtd FROM cliente
+UNION ALL SELECT 'veiculo', COUNT(*) FROM veiculo
+UNION ALL SELECT 'funcionario', COUNT(*) FROM funcionario
+UNION ALL SELECT 'tipo_servico', COUNT(*) FROM tipo_servico
+UNION ALL SELECT 'peca', COUNT(*) FROM peca
+UNION ALL SELECT 'agendamento', COUNT(*) FROM agendamento
+UNION ALL SELECT 'item_servico', COUNT(*) FROM item_servico
+UNION ALL SELECT 'item_peca', COUNT(*) FROM item_peca
+UNION ALL SELECT 'pagamento', COUNT(*) FROM pagamento
+UNION ALL SELECT 'avaliacao', COUNT(*) FROM avaliacao;
+\echo '=== Q1 RUN 3 ==='
 EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
 SELECT 'cliente' AS tabela, COUNT(*) AS qtd FROM cliente
 UNION ALL SELECT 'veiculo', COUNT(*) FROM veiculo
@@ -18,25 +39,73 @@ UNION ALL SELECT 'item_peca', COUNT(*) FROM item_peca
 UNION ALL SELECT 'pagamento', COUNT(*) FROM pagamento
 UNION ALL SELECT 'avaliacao', COUNT(*) FROM avaliacao;
 
--- Consulta 2: Receita total e ticket médio por mês (últimos 12 meses)
-ANALYZE;
+\echo '=== Q2 RUN 1 ==='
 EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
-SELECT 
+SELECT
     TO_CHAR(data_conclusao, 'YYYY-MM') AS mes,
     COUNT(*) AS qtd_agendamentos,
     ROUND(SUM(total_geral)::numeric, 2) AS receita_total,
     ROUND(AVG(total_geral)::numeric, 2) AS ticket_medio
 FROM agendamento
-WHERE status = 'Concluido'
+WHERE status = 'Concluído'
+  AND data_conclusao IS NOT NULL
+  AND data_conclusao >= CURRENT_DATE - INTERVAL '12 months'
+GROUP BY TO_CHAR(data_conclusao, 'YYYY-MM')
+ORDER BY mes DESC;
+\echo '=== Q2 RUN 2 ==='
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
+SELECT
+    TO_CHAR(data_conclusao, 'YYYY-MM') AS mes,
+    COUNT(*) AS qtd_agendamentos,
+    ROUND(SUM(total_geral)::numeric, 2) AS receita_total,
+    ROUND(AVG(total_geral)::numeric, 2) AS ticket_medio
+FROM agendamento
+WHERE status = 'Concluído'
+  AND data_conclusao IS NOT NULL
+  AND data_conclusao >= CURRENT_DATE - INTERVAL '12 months'
+GROUP BY TO_CHAR(data_conclusao, 'YYYY-MM')
+ORDER BY mes DESC;
+\echo '=== Q2 RUN 3 ==='
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
+SELECT
+    TO_CHAR(data_conclusao, 'YYYY-MM') AS mes,
+    COUNT(*) AS qtd_agendamentos,
+    ROUND(SUM(total_geral)::numeric, 2) AS receita_total,
+    ROUND(AVG(total_geral)::numeric, 2) AS ticket_medio
+FROM agendamento
+WHERE status = 'Concluído'
   AND data_conclusao IS NOT NULL
   AND data_conclusao >= CURRENT_DATE - INTERVAL '12 months'
 GROUP BY TO_CHAR(data_conclusao, 'YYYY-MM')
 ORDER BY mes DESC;
 
--- Consulta 3: Top 10 tipos de serviço mais realizados
-ANALYZE;
+\echo '=== Q3 RUN 1 ==='
 EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
-SELECT 
+SELECT
+    ts.id_tipo_servico,
+    ts.descricao,
+    SUM(isv.quantidade) AS qtd_execucoes,
+    ROUND(SUM(isv.total)::numeric, 2) AS faturamento
+FROM item_servico isv
+JOIN tipo_servico ts ON isv.id_tipo_servico = ts.id_tipo_servico
+GROUP BY ts.id_tipo_servico, ts.descricao
+ORDER BY qtd_execucoes DESC, faturamento DESC
+LIMIT 10;
+\echo '=== Q3 RUN 2 ==='
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
+SELECT
+    ts.id_tipo_servico,
+    ts.descricao,
+    SUM(isv.quantidade) AS qtd_execucoes,
+    ROUND(SUM(isv.total)::numeric, 2) AS faturamento
+FROM item_servico isv
+JOIN tipo_servico ts ON isv.id_tipo_servico = ts.id_tipo_servico
+GROUP BY ts.id_tipo_servico, ts.descricao
+ORDER BY qtd_execucoes DESC, faturamento DESC
+LIMIT 10;
+\echo '=== Q3 RUN 3 ==='
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
+SELECT
     ts.id_tipo_servico,
     ts.descricao,
     SUM(isv.quantidade) AS qtd_execucoes,
@@ -47,10 +116,9 @@ GROUP BY ts.id_tipo_servico, ts.descricao
 ORDER BY qtd_execucoes DESC, faturamento DESC
 LIMIT 10;
 
--- Consulta 4: Ranking de funcionários por faturamento
-ANALYZE;
+\echo '=== Q4 RUN 1 ==='
 EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
-SELECT 
+SELECT
     f.id_funcionario,
     f.nome,
     COUNT(DISTINCT isv.id_agendamento) AS qtd_os,
@@ -58,14 +126,67 @@ SELECT
 FROM funcionario f
 JOIN item_servico isv ON isv.id_funcionario = f.id_funcionario
 JOIN agendamento ag ON ag.id_agendamento = isv.id_agendamento
-WHERE ag.status = 'Concluido'
+WHERE ag.status = 'Concluído'
+GROUP BY f.id_funcionario, f.nome
+ORDER BY faturamento DESC;
+\echo '=== Q4 RUN 2 ==='
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
+SELECT
+    f.id_funcionario,
+    f.nome,
+    COUNT(DISTINCT isv.id_agendamento) AS qtd_os,
+    ROUND(SUM(isv.total)::numeric, 2) AS faturamento
+FROM funcionario f
+JOIN item_servico isv ON isv.id_funcionario = f.id_funcionario
+JOIN agendamento ag ON ag.id_agendamento = isv.id_agendamento
+WHERE ag.status = 'Concluído'
+GROUP BY f.id_funcionario, f.nome
+ORDER BY faturamento DESC;
+\echo '=== Q4 RUN 3 ==='
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
+SELECT
+    f.id_funcionario,
+    f.nome,
+    COUNT(DISTINCT isv.id_agendamento) AS qtd_os,
+    ROUND(SUM(isv.total)::numeric, 2) AS faturamento
+FROM funcionario f
+JOIN item_servico isv ON isv.id_funcionario = f.id_funcionario
+JOIN agendamento ag ON ag.id_agendamento = isv.id_agendamento
+WHERE ag.status = 'Concluído'
 GROUP BY f.id_funcionario, f.nome
 ORDER BY faturamento DESC;
 
--- Consulta 5: Top 20 clientes por gasto acumulado
-ANALYZE;
+\echo '=== Q5 RUN 1 ==='
 EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
-SELECT 
+SELECT
+    c.id_cliente,
+    c.nome,
+    CASE WHEN c.cpf IS NOT NULL THEN 'PF' ELSE 'PJ' END AS tipo_cliente,
+    ROUND(SUM(p.valor)::numeric, 2) AS gasto_total
+FROM cliente c
+JOIN veiculo v ON v.id_cliente = c.id_cliente
+JOIN agendamento ag ON ag.id_veiculo = v.id_veiculo
+JOIN pagamento p ON p.id_agendamento = ag.id_agendamento
+GROUP BY c.id_cliente, c.nome, tipo_cliente
+ORDER BY gasto_total DESC
+LIMIT 20;
+\echo '=== Q5 RUN 2 ==='
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
+SELECT
+    c.id_cliente,
+    c.nome,
+    CASE WHEN c.cpf IS NOT NULL THEN 'PF' ELSE 'PJ' END AS tipo_cliente,
+    ROUND(SUM(p.valor)::numeric, 2) AS gasto_total
+FROM cliente c
+JOIN veiculo v ON v.id_cliente = c.id_cliente
+JOIN agendamento ag ON ag.id_veiculo = v.id_veiculo
+JOIN pagamento p ON p.id_agendamento = ag.id_agendamento
+GROUP BY c.id_cliente, c.nome, tipo_cliente
+ORDER BY gasto_total DESC
+LIMIT 20;
+\echo '=== Q5 RUN 3 ==='
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
+SELECT
     c.id_cliente,
     c.nome,
     CASE WHEN c.cpf IS NOT NULL THEN 'PF' ELSE 'PJ' END AS tipo_cliente,
@@ -78,10 +199,29 @@ GROUP BY c.id_cliente, c.nome, tipo_cliente
 ORDER BY gasto_total DESC
 LIMIT 20;
 
--- Consulta 6: Distribuição percentual das formas de pagamento
-ANALYZE;
+\echo '=== Q6 RUN 1 ==='
 EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
-SELECT 
+SELECT
+    forma_pagamento,
+    COUNT(*) AS qtd_transacoes,
+    ROUND(SUM(valor)::numeric, 2) AS valor_total,
+    ROUND((SUM(valor) * 100.0 / (SELECT SUM(valor) FROM pagamento))::numeric, 2) AS perc_valor
+FROM pagamento
+GROUP BY forma_pagamento
+ORDER BY valor_total DESC;
+\echo '=== Q6 RUN 2 ==='
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
+SELECT
+    forma_pagamento,
+    COUNT(*) AS qtd_transacoes,
+    ROUND(SUM(valor)::numeric, 2) AS valor_total,
+    ROUND((SUM(valor) * 100.0 / (SELECT SUM(valor) FROM pagamento))::numeric, 2) AS perc_valor
+FROM pagamento
+GROUP BY forma_pagamento
+ORDER BY valor_total DESC;
+\echo '=== Q6 RUN 3 ==='
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
+SELECT
     forma_pagamento,
     COUNT(*) AS qtd_transacoes,
     ROUND(SUM(valor)::numeric, 2) AS valor_total,
@@ -90,24 +230,72 @@ FROM pagamento
 GROUP BY forma_pagamento
 ORDER BY valor_total DESC;
 
--- Consulta 7: Peças com estoque abaixo do mínimo
-ANALYZE;
+\echo '=== Q7 RUN 1 ==='
 EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
-SELECT 
+SELECT
     id_peca,
     nome,
     quantidade_estoque,
     quantidade_minima,
     (quantidade_minima - quantidade_estoque) AS deficit,
-    NULL AS fornecedor
+    fornecedor
+FROM peca
+WHERE quantidade_estoque < quantidade_minima
+ORDER BY deficit DESC;
+\echo '=== Q7 RUN 2 ==='
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
+SELECT
+    id_peca,
+    nome,
+    quantidade_estoque,
+    quantidade_minima,
+    (quantidade_minima - quantidade_estoque) AS deficit,
+    fornecedor
+FROM peca
+WHERE quantidade_estoque < quantidade_minima
+ORDER BY deficit DESC;
+\echo '=== Q7 RUN 3 ==='
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
+SELECT
+    id_peca,
+    nome,
+    quantidade_estoque,
+    quantidade_minima,
+    (quantidade_minima - quantidade_estoque) AS deficit,
+    fornecedor
 FROM peca
 WHERE quantidade_estoque < quantidade_minima
 ORDER BY deficit DESC;
 
--- Consulta 8: Nota média por funcionário (>= 5 avaliações)
-ANALYZE;
+\echo '=== Q8 RUN 1 ==='
 EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
-SELECT 
+SELECT
+    f.id_funcionario,
+    f.nome,
+    COUNT(DISTINCT av.id_avaliacao) AS qtd_avaliacoes,
+    ROUND(AVG(av.nota)::numeric, 2) AS nota_media
+FROM funcionario f
+JOIN item_servico isv ON isv.id_funcionario = f.id_funcionario
+JOIN avaliacao av ON av.id_agendamento = isv.id_agendamento
+GROUP BY f.id_funcionario, f.nome
+HAVING COUNT(DISTINCT av.id_avaliacao) >= 5
+ORDER BY nota_media DESC;
+\echo '=== Q8 RUN 2 ==='
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
+SELECT
+    f.id_funcionario,
+    f.nome,
+    COUNT(DISTINCT av.id_avaliacao) AS qtd_avaliacoes,
+    ROUND(AVG(av.nota)::numeric, 2) AS nota_media
+FROM funcionario f
+JOIN item_servico isv ON isv.id_funcionario = f.id_funcionario
+JOIN avaliacao av ON av.id_agendamento = isv.id_agendamento
+GROUP BY f.id_funcionario, f.nome
+HAVING COUNT(DISTINCT av.id_avaliacao) >= 5
+ORDER BY nota_media DESC;
+\echo '=== Q8 RUN 3 ==='
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
+SELECT
     f.id_funcionario,
     f.nome,
     COUNT(DISTINCT av.id_avaliacao) AS qtd_avaliacoes,
