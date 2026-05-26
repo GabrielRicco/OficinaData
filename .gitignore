@@ -1,0 +1,41 @@
+# IDE / Editor
+.idea/
+.vscode/
+*.iml
+
+# Build / dependencies
+target/
+build/
+dist/
+out/
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mvn/
+mvnw
+mvnw.cmd
+
+# Credentials / env
+.env
+.env.local
+.env.*.local
+application-local.*
+application-secret.*
+secrets/
+
+# Logs
+*.log
+logs/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Tooling state
+.claude/
+
+# Material da disciplina (não versionar)
+atividade_bd_oficina_*.pdf
+atividade_bd_oficina_*.docx
