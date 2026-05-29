@@ -1,22 +1,40 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './Dashboard.css'; // Conexão com o CSS moderno que criamos
 import Botao from '../../components/Button'; // Reaproveitando nosso componente de botão!
+import { carregarDashboard } from '../../services/agendamentoService';
 
 function Dashboard() {
-  // Simulando os dados consolidados vindos das suas consultas SQL do PostgreSQL
-  const [metricas] = useState({
-    faturamentoMensal: 'R$ 18.450,00',
-    ticketMedio: 'R$ 580,00',
-    carrosAgendados: 12,
-    osConcluidas: 45
+  const [metricas, setMetricas] = useState({
+    faturamentoMensal: 0,
+    ticketMedio: 0,
+    carrosAgendados: 0,
+    osConcluidas: 0
   });
 
-  // Lista rápida das últimas movimentações para o gerente acompanhar
-  const [ultimosAgendamentos] = useState([
-    { id: '#104', cliente: 'Oficina do Mecânico LTDA', veiculo: 'VW Delivery', status: 'Em andamento', valor: 'R$ 850,00' },
-    { id: '#103', cliente: 'Carlos Alberto', veiculo: 'Chevrolet Onix', status: 'Concluído', valor: 'R$ 320,00' },
-    { id: '#102', cliente: 'Mariana Costa', veiculo: 'Hyundai HB20', status: 'Agendado', valor: 'R$ 150,00' }
-  ]);
+  const [ultimosAgendamentos, setUltimosAgendamentos] = useState([]);
+  const [erro, setErro] = useState('');
+  const [carregando, setCarregando] = useState(true);
+
+  useEffect(() => {
+    async function carregar() {
+      try {
+        const dados = await carregarDashboard();
+        setMetricas(dados.metricas);
+        setUltimosAgendamentos(dados.ultimosAgendamentos);
+      } catch (error) {
+        setErro(error.message);
+      } finally {
+        setCarregando(false);
+      }
+    }
+
+    carregar();
+  }, []);
+
+  const formatarMoeda = (valor) => Number(valor || 0).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  });
 
   return (
     <div className="dashboard-container">
@@ -38,12 +56,12 @@ function Dashboard() {
       <div className="metrics-grid">
         <div className="metric-card">
           <p className="title">Faturamento (Mês)</p>
-          <p className="number" style={{ color: '#16a34a' }}>{metricas.faturamentoMensal}</p>
+          <p className="number" style={{ color: '#16a34a' }}>{formatarMoeda(metricas.faturamentoMensal)}</p>
         </div>
 
         <div className="metric-card">
           <p className="title">Ticket Médio</p>
-          <p className="number">{metricas.ticketMedio}</p>
+          <p className="number">{formatarMoeda(metricas.ticketMedio)}</p>
         </div>
 
         <div className="metric-card">
@@ -66,6 +84,8 @@ function Dashboard() {
       </div>
 
       <div className="tabela-card">
+        {erro && <p className="form-error">{erro}</p>}
+        {carregando && <p className="tabela-vazia">Carregando dashboard...</p>}
         <table className="tabela-oficina">
           <thead>
             <tr>
@@ -79,7 +99,7 @@ function Dashboard() {
           <tbody>
             {ultimosAgendamentos.map((os) => (
               <tr key={os.id}>
-                <td><strong>{os.id}</strong></td>
+                <td><strong>#{os.id}</strong></td>
                 <td>{os.cliente}</td>
                 <td>{os.veiculo}</td>
                 <td>
@@ -90,9 +110,14 @@ function Dashboard() {
                     {os.status}
                   </span>
                 </td>
-                <td>{os.valor}</td>
+                <td>{formatarMoeda(os.valorTotal)}</td>
               </tr>
             ))}
+            {!carregando && ultimosAgendamentos.length === 0 && (
+              <tr>
+                <td colSpan="5" className="tabela-vazia">Nenhuma atividade recente encontrada.</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

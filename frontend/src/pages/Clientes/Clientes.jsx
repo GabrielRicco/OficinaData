@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import './Clientes.css'; // Conexão com o arquivo de estilos separados
+import { cadastrarCliente } from '../../services/clienteService';
 
 function Clientes() {
   // Estado para controlar se é Pessoa Física (PF) ou Pessoa Jurídica (PJ)
@@ -17,11 +18,14 @@ function Clientes() {
   const [marca, setMarca] = useState('');
   const [modelo, setModelo] = useState('');
   const [ano, setAno] = useState('');
+  const [erro, setErro] = useState('');
+  const [salvando, setSalvando] = useState(false);
 
-  const lidarComCadastro = (e) => {
+  const lidarComCadastro = async (e) => {
     e.preventDefault();
+    setErro('');
+    setSalvando(true);
 
-    // Cria o objeto simulando o que será enviado para o banco de dados futuramente
     const dadosParaEnvio = {
       tipo: tipoCliente,
       nome,
@@ -32,17 +36,32 @@ function Clientes() {
       veiculo: { placa, marca, modelo, ano }
     };
 
-    console.log('Dados prontos para o PostgreSQL:', dadosParaEnvio);
-    alert(`Cliente ${nome} e veículo de placa ${placa} cadastrados com sucesso! (Verifique o console do navegador)`);
-    
-    // Após salvar, finge que volta para a tela de listagem de agendamentos
-    window.location.href = '/agendamentos';
+    try {
+      await cadastrarCliente(dadosParaEnvio);
+      alert(`Cliente ${nome} e veículo de placa ${placa} cadastrados com sucesso!`);
+      window.location.href = '/agendamentos';
+    } catch (error) {
+      setErro(error.message);
+    } finally {
+      setSalvando(false);
+    }
   };
 
   return (
     <div className="clientes-container">
       <div className="clientes-card">
-        <h2 className="clientes-title">🚗 Novo Cadastro</h2>
+        <div className="clientes-title-row">
+          <button
+            type="button"
+            className="btn-voltar-inicio"
+            onClick={() => window.location.href = '/dashboard'}
+            aria-label="Voltar para o dashboard"
+            title="Voltar para o dashboard"
+          >
+            ←
+          </button>
+          <h2 className="clientes-title">🚗 Novo Cadastro</h2>
+        </div>
         <p className="clientes-subtitle">Insira os dados do cliente e do veículo para liberar a Ordem de Serviço</p>
 
         {/* Abas de seleção dinâmica: Muda o comportamento do formulário */}
@@ -145,7 +164,7 @@ function Clientes() {
                 className="campo-input" 
                 placeholder="ABC1D23 ou ABC-1234" 
                 value={placa}
-                onChange={(e) => setPlaca(e.target.value).toUpperCase()} // Sempre em letras maiúsculas
+                onChange={(e) => setPlaca(e.target.value.toUpperCase())}
                 required 
               />
             </div>
@@ -189,6 +208,8 @@ function Clientes() {
           </div>
 
           {/* BOTÕES DE SALVAMENTO */}
+          {erro && <p className="form-error">{erro}</p>}
+
           <div className="acoes-container">
             <button 
               type="button" 
@@ -198,7 +219,7 @@ function Clientes() {
               Cancelar
             </button>
             <button type="submit" className="btn-salvar">
-              Salvar Cadastro
+              {salvando ? 'Salvando...' : 'Salvar Cadastro'}
             </button>
           </div>
 

@@ -175,4 +175,25 @@ ALTER ROLE postgres SET search_path TO oficina, public;
 
 ## 10. Execução da aplicação (Entrega 6)
 
-> Esta seção será preenchida quando a Entrega 6 for implementada.
+Backend Spring Boot:
+
+```bash
+cd backend
+mvn spring-boot:run
+```
+
+Frontend React:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+O frontend usa `http://localhost:8080/api` por padrão. Para alterar:
+
+```bash
+VITE_API_URL=http://localhost:8080/api npm run dev
+```
+
+Enquanto os usuários do script de carga mantiverem hashes placeholder, a API aceita a senha `123456` para login local.

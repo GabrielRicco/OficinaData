@@ -1,22 +1,25 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import './Login.css'; // 👈 Aqui nós conectamos o arquivo de estilo!
+import { login } from '../../services/authService';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [erro, setErro] = useState('');
+  const [carregando, setCarregando] = useState(false);
 
-  const lidarComLogin = (e) => {
+  const lidarComLogin = async (e) => {
     e.preventDefault();
+    setErro('');
+    setCarregando(true);
 
-    // Simulação das regras de perfil do seu banco de dados
-    if (email === 'atendente@oficina.local') {
-      alert('Login aceito! Perfil: Atendente. Redirecionando...');
-      window.location.href = '/agendamentos';
-    } else if (email === 'gerente@oficina.local') {
-      alert('Login aceito! Perfil: Gerente. Redirecionando...');
-      window.location.href = '/dashboard';
-    } else {
-      alert('Usuário não encontrado ou senha incorreta!');
+    try {
+      const response = await login(email, senha);
+      window.location.href = response.usuario.perfil === 'Gerente' ? '/dashboard' : '/agendamentos';
+    } catch (error) {
+      setErro(error.message);
+    } finally {
+      setCarregando(false);
     }
   };
 
@@ -49,8 +52,10 @@ function Login() {
           />
         </div>
 
+        {erro && <p className="login-error">{erro}</p>}
+
         <button type="submit" className="btn-submit">
-          Entrar no Sistema
+          {carregando ? 'Entrando...' : 'Entrar no Sistema'}
         </button>
       </form>
     </div>

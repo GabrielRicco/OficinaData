@@ -57,3 +57,9 @@
 .btn-submit:hover {
   background-color: #1557b0;
 }
+
+.login-error {
+  margin: 0 0 14px;
+  color: #b91c1c;
+  font-size: 14px;
+}

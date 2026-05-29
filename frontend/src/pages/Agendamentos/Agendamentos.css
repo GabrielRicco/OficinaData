@@ -20,6 +20,35 @@
   color: #333;
 }
 
+.header-titulo {
+  position: relative;
+  padding-left: 42px;
+}
+
+.btn-voltar-inicio {
+  position: absolute;
+  left: 0;
+  top: 1px;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  color: #333;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-voltar-inicio:hover {
+  border-color: #1a73e8;
+  color: #1a73e8;
+  background-color: #eef4ff;
+}
+
 .header-titulo p {
   margin: 0;
   color: #666;
@@ -100,4 +129,17 @@
 .badge.agendado {
   background-color: #cce5ff;
   color: #004085;
+}
+
+.form-error,
+.tabela-vazia {
+  padding: 16px;
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.form-error {
+  color: #b91c1c;
+  font-weight: 600;
 }

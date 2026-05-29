@@ -1,4 +1,3 @@
-import React from 'react';
 import './Button.css'; // Conexão com os estilos do botão
 
 // Usamos as 'props' (propriedades) para deixar o botão dinâmico!
