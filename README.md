@@ -2,7 +2,7 @@
 
 Sistema de Agendamento de Manutenção Veicular (Oficina Mecânica).
 
-Projeto desenvolvido conforme o enunciado v4 da disciplina. No momento, o repositório está focado nas **Entregas 1 a 5 (Banco de Dados)**. As pastas `backend/` e `frontend/` serão preenchidas na **Entrega 6** (aplicação MVC REST com autenticação JWT).
+Projeto desenvolvido conforme o enunciado v4 da disciplina. O repositório contém as entregas de banco de dados e a aplicação da **Entrega 6** com backend Spring Boot REST, autenticação JWT e frontend React.
 
 ---
 
@@ -49,8 +49,8 @@ db/
   04_consultas.sql       - 8 consultas analíticas
   05_indices.sql         - Índices validados via EXPLAIN ANALYZE
   explain_queries.sql    - Utilitário para coleta de planos de execução
-backend/                 - Aplicação Spring Boot / FastAPI (Entrega 6, em desenvolvimento)
-frontend/                - Aplicação React / Vue / Angular (Entrega 6, em desenvolvimento)
+backend/                 - Aplicação Spring Boot REST com JWT, Swagger e profiles dev/prod
+frontend/                - Aplicação React + Vite consumindo a API REST
 docs/
   06_relatorio.pdf       - Relatório do ciclo EXPLAIN ANALYZE
 README.md                - Este arquivo
@@ -61,8 +61,8 @@ README.md                - Este arquivo
 ## 3. Stack
 
 - **Banco de dados**: PostgreSQL 16+
-- **Backend**: [Spring Boot (Java) / FastAPI (Python) / Django REST (Python) — a decidir]
-- **Frontend**: [React / Vue / Angular / Svelte — a decidir]
+- **Backend**: Spring Boot 3 / Java 17
+- **Frontend**: React + Vite
 - **Autenticação**: JWT
 - **Documentação da API**: OpenAPI / Swagger UI
 
@@ -75,7 +75,7 @@ O DDL (`db/02_ddl.sql`) já inclui a tabela `usuario`, que dará suporte à aute
 - **Atendente**: opera o fluxo de agendamentos, peças e serviços.
 - **Gerente**: além das operações de atendente, tem acesso a relatórios analíticos e gestão de usuários.
 
-A geração e validação dos tokens JWT, bem como o controle de papéis (roles), serão implementados no backend da Entrega 6.
+A geração e validação dos tokens JWT, bem como o controle de papéis (roles), estão implementados no backend da Entrega 6.
 
 ---
 
@@ -175,4 +175,102 @@ ALTER ROLE postgres SET search_path TO oficina, public;
 
 ## 10. Execução da aplicação (Entrega 6)
 
-> Esta seção será preenchida quando a Entrega 6 for implementada.
+### 10.1 Backend Spring Boot
+
+O backend fica em `backend/` e implementa os requisitos da seção 6.2 do enunciado:
+
+- Autenticação JWT em `POST /api/auth/login` e renovação em `POST /api/auth/refresh`.
+- Proteção dos endpoints por perfil: `ATENDENTE` e `GERENTE`.
+- DTOs para entrada/saída, sem exposição direta das entidades JPA nos controllers principais.
+- Tratamento centralizado de erros em JSON.
+- Paginação em listagens de clientes e agendamentos.
+- Swagger UI gerado automaticamente em `http://localhost:8080/swagger-ui.html`.
+- Profiles `dev` e `prod`.
+- Queries analíticas expostas por endpoints de relatório usando SQL nativo.
+
+Variáveis de ambiente principais:
+
+| Variável | Exemplo | Descrição |
+|---|---|---|
+| `SPRING_PROFILES_ACTIVE` | `dev` | Perfil ativo: `dev` ou `prod`. |
+| `DB_URL` | `jdbc:postgresql://localhost:5432/oficina_db?currentSchema=oficina` | URL JDBC do PostgreSQL. |
+| `DB_USERNAME` | `postgres` | Usuário do banco. |
+| `DB_PASSWORD` | `postgres` | Senha do banco. |
+| `JWT_SECRET` | `troque-por-uma-chave-com-mais-de-32-caracteres` | Chave HMAC do JWT. |
+| `JWT_EXPIRATION_MINUTES` | `60` | Expiração do access token. |
+| `JWT_REFRESH_EXPIRATION_MINUTES` | `240` | Expiração do refresh token. |
+
+Execução local:
+
+```bash
+cd backend
+mvn spring-boot:run
+```
+
+Build:
+
+```bash
+cd backend
+mvn package
+```
+
+Usuários de desenvolvimento carregados por `db/03_dados.sql` usam hashes placeholder. Para facilitar a demonstração local, o backend aceita a senha `123456` quando detectar esses hashes placeholder:
+
+- `gerente@oficina.local` / `123456`
+- `atendente1@oficina.local` / `123456`
+
+Em produção, substitua os valores de `senha_hash` por hashes BCrypt reais.
+
+### 10.2 Frontend React
+
+O frontend fica em `frontend/` e consome a API em `http://localhost:8080/api` por padrão.
+
+Para trocar a URL da API:
+
+```bash
+cd frontend
+set VITE_API_URL=http://localhost:8080/api
+```
+
+Execução local:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+O token JWT é mantido em memória no módulo `src/services/api.js`, sem uso de `localStorage` ou `sessionStorage`.
+
+### 10.3 Endpoints principais
+
+| Método | Rota | Perfil |
+|---|---|---|
+| `POST` | `/api/auth/login` | Público |
+| `POST` | `/api/auth/refresh` | Público com refresh token |
+| `POST` | `/api/clientes` | Atendente/Gerente |
+| `GET` | `/api/clientes/{id}` | Atendente/Gerente |
+| `GET` | `/api/clientes/{id}/veiculos` | Atendente/Gerente |
+| `GET` | `/api/clientes?nome=&tipo=` | Atendente/Gerente |
+| `PUT` | `/api/clientes/{id}` | Atendente/Gerente |
+| `POST` | `/api/veiculos` | Atendente/Gerente |
+| `GET` | `/api/veiculos/{placa}` | Atendente/Gerente |
+| `POST` | `/api/agendamentos` | Atendente/Gerente |
+| `GET` | `/api/agendamentos/{id}` | Atendente/Gerente |
+| `PATCH` | `/api/agendamentos/{id}/status` | Atendente/Gerente |
+| `GET` | `/api/agendamentos?status=&data=` | Atendente/Gerente |
+| `POST` | `/api/agendamentos/{id}/itens-servico` | Atendente/Gerente |
+| `POST` | `/api/agendamentos/{id}/itens-peca` | Atendente/Gerente |
+| `POST` | `/api/agendamentos/{id}/pagamento` | Atendente/Gerente |
+| `POST` | `/api/agendamentos/{id}/avaliacao` | Atendente/Gerente |
+| `GET` | `/api/tipos-servico` | Atendente/Gerente |
+| `GET` | `/api/pecas?nome=&fornecedor=&precoMin=&precoMax=` | Atendente/Gerente |
+| `GET` | `/api/funcionarios` | Atendente/Gerente |
+| `GET` | `/api/relatorios/receita-mensal` | Gerente |
+| `GET` | `/api/relatorios/ranking-servicos` | Gerente |
+| `GET` | `/api/relatorios/ranking-funcionarios` | Gerente |
+| `GET` | `/api/relatorios/top-clientes` | Gerente |
+| `GET` | `/api/relatorios/formas-pagamento` | Gerente |
+| `GET` | `/api/relatorios/dashboard` | Gerente |
+| `GET` | `/api/pecas/abaixo-estoque-minimo` | Atendente/Gerente |
+| `POST` | `/api/funcionarios` | Gerente |

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Clientes.css'; // Conexão com o arquivo de estilos separados
+import { cadastrarCliente, cadastrarVeiculo } from '../../services/clienteService';
 
 function Clientes() {
   // Estado para controlar se é Pessoa Física (PF) ou Pessoa Jurídica (PJ)
@@ -17,26 +19,40 @@ function Clientes() {
   const [marca, setMarca] = useState('');
   const [modelo, setModelo] = useState('');
   const [ano, setAno] = useState('');
+  const [erro, setErro] = useState('');
+  const [salvando, setSalvando] = useState(false);
+  const navigate = useNavigate();
 
-  const lidarComCadastro = (e) => {
+  const lidarComCadastro = async (e) => {
     e.preventDefault();
+    setErro('');
+    setSalvando(true);
 
-    // Cria o objeto simulando o que será enviado para o banco de dados futuramente
-    const dadosParaEnvio = {
-      tipo: tipoCliente,
+    const numerosDocumento = documento.replace(/\D/g, '');
+    const clientePayload = {
       nome,
-      documento,
       email,
-      telefone,
-      inscricao_estadual: tipoCliente === 'PJ' ? inscricaoEstadual : null,
-      veiculo: { placa, marca, modelo, ano }
+      telefone: telefone.replace(/\D/g, ''),
+      cpf: tipoCliente === 'PF' ? numerosDocumento : null,
+      cnpj: tipoCliente === 'PJ' ? numerosDocumento : null
     };
 
-    console.log('Dados prontos para o PostgreSQL:', dadosParaEnvio);
-    alert(`Cliente ${nome} e veículo de placa ${placa} cadastrados com sucesso! (Verifique o console do navegador)`);
-    
-    // Após salvar, finge que volta para a tela de listagem de agendamentos
-    window.location.href = '/agendamentos';
+    try {
+      const cliente = await cadastrarCliente(clientePayload);
+      await cadastrarVeiculo({
+        clienteId: cliente.id,
+        placa: placa.replace(/[^a-zA-Z0-9]/g, '').toUpperCase(),
+        marca,
+        modelo,
+        ano: Number(ano)
+      });
+      alert(`Cliente ${nome} e veículo de placa ${placa} cadastrados com sucesso!`);
+      navigate('/agendamentos');
+    } catch (error) {
+      setErro(error.message);
+    } finally {
+      setSalvando(false);
+    }
   };
 
   return (
@@ -190,15 +206,16 @@ function Clientes() {
 
           {/* BOTÕES DE SALVAMENTO */}
           <div className="acoes-container">
+            {erro && <p className="form-error">{erro}</p>}
             <button 
               type="button" 
               className="btn-cancelar"
-              onClick={() => window.location.href = '/agendamentos'}
+              onClick={() => navigate('/agendamentos')}
             >
               Cancelar
             </button>
-            <button type="submit" className="btn-salvar">
-              Salvar Cadastro
+            <button type="submit" className="btn-salvar" disabled={salvando}>
+              {salvando ? 'Salvando...' : 'Salvar Cadastro'}
             </button>
           </div>
 

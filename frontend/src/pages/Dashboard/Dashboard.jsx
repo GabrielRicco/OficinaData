@@ -1,22 +1,37 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Dashboard.css'; // Conexão com o CSS moderno que criamos
 import Botao from '../../components/Button'; // Reaproveitando nosso componente de botão!
+import { buscarDashboard } from '../../services/relatorioService';
+import { listarAgendamentos } from '../../services/agendamentoService';
 
 function Dashboard() {
-  // Simulando os dados consolidados vindos das suas consultas SQL do PostgreSQL
-  const [metricas] = useState({
-    faturamentoMensal: 'R$ 18.450,00',
-    ticketMedio: 'R$ 580,00',
-    carrosAgendados: 12,
-    osConcluidas: 45
+  const [metricas, setMetricas] = useState({
+    faturamentoMensal: 'R$ 0,00',
+    ticketMedio: '0.00',
+    carrosAgendados: 0,
+    osConcluidas: 0
   });
+  const [erro, setErro] = useState('');
+  const navigate = useNavigate();
 
-  // Lista rápida das últimas movimentações para o gerente acompanhar
-  const [ultimosAgendamentos] = useState([
-    { id: '#104', cliente: 'Oficina do Mecânico LTDA', veiculo: 'VW Delivery', status: 'Em andamento', valor: 'R$ 850,00' },
-    { id: '#103', cliente: 'Carlos Alberto', veiculo: 'Chevrolet Onix', status: 'Concluído', valor: 'R$ 320,00' },
-    { id: '#102', cliente: 'Mariana Costa', veiculo: 'Hyundai HB20', status: 'Agendado', valor: 'R$ 150,00' }
-  ]);
+  const [ultimosAgendamentos, setUltimosAgendamentos] = useState([]);
+
+  useEffect(() => {
+    Promise.all([buscarDashboard(), listarAgendamentos({ size: 5 })])
+      .then(([dashboard, pagina]) => {
+        setMetricas({
+          faturamentoMensal: Number(dashboard.receitaDia || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+          ticketMedio: dashboard.notaMedia,
+          carrosAgendados: dashboard.osAbertas,
+          osConcluidas: dashboard.pecasEmAlerta
+        });
+        setUltimosAgendamentos(pagina.content || []);
+      })
+      .catch((error) => setErro(error.message));
+  }, []);
+
+  const moeda = (valor) => Number(valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
   return (
     <div className="dashboard-container">
@@ -29,7 +44,7 @@ function Dashboard() {
         </div>
         <Botao 
           texto="📋 Ver Todas as O.S." 
-          onClick={() => window.location.href = '/agendamentos'} 
+          onClick={() => navigate('/agendamentos')} 
           tipo="azul" 
         />
       </div>
@@ -37,17 +52,17 @@ function Dashboard() {
       {/* 2. GRID DE METRICAS (CARD DE INDICADORES) */}
       <div className="metrics-grid">
         <div className="metric-card">
-          <p className="title">Faturamento (Mês)</p>
+          <p className="title">Receita (Dia)</p>
           <p className="number" style={{ color: '#16a34a' }}>{metricas.faturamentoMensal}</p>
         </div>
 
         <div className="metric-card">
-          <p className="title">Ticket Médio</p>
+          <p className="title">Nota Média</p>
           <p className="number">{metricas.ticketMedio}</p>
         </div>
 
         <div className="metric-card">
-          <p className="title">Ordens Concluídas</p>
+          <p className="title">Peças em alerta</p>
           <p className="number">{metricas.osConcluidas}</p>
         </div>
 
@@ -66,6 +81,7 @@ function Dashboard() {
       </div>
 
       <div className="tabela-card">
+        {erro && <p className="form-error">{erro}</p>}
         <table className="tabela-oficina">
           <thead>
             <tr>
@@ -79,7 +95,7 @@ function Dashboard() {
           <tbody>
             {ultimosAgendamentos.map((os) => (
               <tr key={os.id}>
-                <td><strong>{os.id}</strong></td>
+                <td><strong>#{os.id}</strong></td>
                 <td>{os.cliente}</td>
                 <td>{os.veiculo}</td>
                 <td>
@@ -90,7 +106,7 @@ function Dashboard() {
                     {os.status}
                   </span>
                 </td>
-                <td>{os.valor}</td>
+                <td>{moeda(os.totalGeral)}</td>
               </tr>
             ))}
           </tbody>

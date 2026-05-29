@@ -9,10 +9,38 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 18px;
   margin-bottom: 30px;
   max-width: 1000px;
   margin-left: auto;
   margin-right: auto;
+}
+
+.header-esquerda {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.seta-voltar-dashboard {
+  width: 42px;
+  height: 42px;
+  cursor: pointer;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.08));
+  transition: transform 0.2s, filter 0.2s;
+  flex: 0 0 auto;
+}
+
+.seta-voltar-dashboard:hover {
+  filter: drop-shadow(0 4px 10px rgba(26, 115, 232, 0.22));
+  transform: translateX(-2px);
+}
+
+.seta-voltar-dashboard:focus-visible {
+  border-radius: 999px;
+  outline: 3px solid rgba(26, 115, 232, 0.28);
+  outline-offset: 2px;
 }
 
 .header-titulo h2 {
