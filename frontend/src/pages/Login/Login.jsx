@@ -1,22 +1,27 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Login.css'; // 👈 Aqui nós conectamos o arquivo de estilo!
+import { login } from '../../services/authService';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [erro, setErro] = useState('');
+  const [carregando, setCarregando] = useState(false);
+  const navigate = useNavigate();
 
-  const lidarComLogin = (e) => {
+  const lidarComLogin = async (e) => {
     e.preventDefault();
+    setErro('');
+    setCarregando(true);
 
-    // Simulação das regras de perfil do seu banco de dados
-    if (email === 'atendente@oficina.local') {
-      alert('Login aceito! Perfil: Atendente. Redirecionando...');
-      window.location.href = '/agendamentos';
-    } else if (email === 'gerente@oficina.local') {
-      alert('Login aceito! Perfil: Gerente. Redirecionando...');
-      window.location.href = '/dashboard';
-    } else {
-      alert('Usuário não encontrado ou senha incorreta!');
+    try {
+      const auth = await login(email, senha);
+      navigate(auth.usuario.perfil === 'GERENTE' ? '/dashboard' : '/agendamentos');
+    } catch (error) {
+      setErro(error.message);
+    } finally {
+      setCarregando(false);
     }
   };
 
@@ -49,8 +54,10 @@ function Login() {
           />
         </div>
 
-        <button type="submit" className="btn-submit">
-          Entrar no Sistema
+        {erro && <p className="form-error">{erro}</p>}
+
+        <button type="submit" className="btn-submit" disabled={carregando}>
+          {carregando ? 'Entrando...' : 'Entrar no Sistema'}
         </button>
       </form>
     </div>

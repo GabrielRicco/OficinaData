@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" role="img" aria-labelledby="title">
+  <title id="title">Seta para voltar</title>
+  <circle cx="24" cy="24" r="22" fill="#ffffff" stroke="#d8dee8" stroke-width="2"/>
+  <path d="M27.5 15L18.5 24L27.5 33" fill="none" stroke="#1f2937" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

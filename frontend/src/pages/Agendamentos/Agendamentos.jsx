@@ -1,17 +1,27 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Agendamentos.css'; 
 import Button from '../../components/Button'; // 👈 Correção do Erro 1 (Define o Botao)
+import { listarAgendamentos } from '../../services/agendamentoService';
+import setaVoltar from '../../assets/arrow-left.svg';
 
 function Agendamentos() {
-  // Dados simulados das OS
-  const [ordensServico, setOrdensServico] = useState([
-    { id: '#1', cliente: 'Cliente PF 1', veiculo: 'Toyota Corolla', status: 'Em andamento', valor: 'R$ 350,00' },
-    { id: '#2', cliente: 'Empresa 1', veiculo: 'Ford Ka', status: 'Concluído', valor: 'R$ 1.200,00' },
-    { id: '#3', cliente: 'Cliente PF 15', veiculo: 'Honda Civic', status: 'Agendado', valor: 'R$ 180,00' }
-  ]);
+  const [ordensServico, setOrdensServico] = useState([]);
+  const [erro, setErro] = useState('');
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    listarAgendamentos({ size: 12 })
+      .then((pagina) => setOrdensServico(pagina.content || []))
+      .catch((error) => setErro(error.message));
+  }, []);
 
   const irParaNovoCadastro = () => {
-    window.location.href = '/clientes';
+    navigate('/clientes');
+  };
+
+  const voltarParaDashboard = () => {
+    navigate('/dashboard');
   };
 
   // 👈 Correção do Erro 2: Garante que a função está com o nome exato "obterClasseStatus"
@@ -21,13 +31,30 @@ function Agendamentos() {
     return 'badge agendado';
   };
 
+  const moeda = (valor) => Number(valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
   return (
     <div className="agendamentos-container">
       
       <div className="agendamentos-header">
-        <div className="header-titulo">
-          <h2>📋 Ordens de Serviço Recentes</h2>
-          <p>Gerenciamento e fluxo de veículos na oficina</p>
+        <div className="header-esquerda">
+          <img
+            src={setaVoltar}
+            className="seta-voltar-dashboard"
+            onClick={voltarParaDashboard}
+            alt="Voltar para o dashboard"
+            title="Voltar para o dashboard"
+            role="button"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') voltarParaDashboard();
+            }}
+          />
+
+          <div className="header-titulo">
+            <h2>📋 Ordens de Serviço Recentes</h2>
+            <p>Gerenciamento e fluxo de veículos na oficina</p>
+          </div>
         </div>
         
         <Button 
@@ -38,6 +65,7 @@ function Agendamentos() {
       </div>
 
       <div className="tabela-card">
+        {erro && <p className="form-error">{erro}</p>}
         <table className="tabela-os">
           <thead>
             <tr>
@@ -51,7 +79,7 @@ function Agendamentos() {
           <tbody>
             {ordensServico.map((os) => (
               <tr key={os.id}>
-                <td><strong>{os.id}</strong></td>
+                <td><strong>#{os.id}</strong></td>
                 <td>{os.cliente}</td>
                 <td>{os.veiculo}</td>
                 <td>
@@ -60,7 +88,7 @@ function Agendamentos() {
                     {os.status}
                   </span>
                 </td>
-                <td>{os.valor}</td>
+                <td>{moeda(os.totalGeral)}</td>
               </tr>
             ))}
           </tbody>
