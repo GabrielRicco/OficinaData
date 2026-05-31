@@ -200,18 +200,19 @@ Variáveis de ambiente principais:
 | `JWT_EXPIRATION_MINUTES` | `60` | Expiração do access token. |
 | `JWT_REFRESH_EXPIRATION_MINUTES` | `240` | Expiração do refresh token. |
 
-Execução local:
+Execução local (com Maven wrapper, sem necessidade de Maven instalado):
 
 ```bash
 cd backend
-mvn spring-boot:run
+./mvnw spring-boot:run        # Linux/macOS
+mvnw.cmd spring-boot:run      # Windows
 ```
 
 Build:
 
 ```bash
 cd backend
-mvn package
+./mvnw package
 ```
 
 Usuários de desenvolvimento carregados por `db/03_dados.sql` usam hashes placeholder. Para facilitar a demonstração local, o backend aceita a senha `123456` quando detectar esses hashes placeholder:
@@ -225,11 +226,12 @@ Em produção, substitua os valores de `senha_hash` por hashes BCrypt reais.
 
 O frontend fica em `frontend/` e consome a API em `http://localhost:8080/api` por padrão.
 
-Para trocar a URL da API:
+Para trocar a URL da API, copie `frontend/.env.example` para `frontend/.env.local` e ajuste:
 
 ```bash
 cd frontend
-set VITE_API_URL=http://localhost:8080/api
+cp .env.example .env.local      # Linux/macOS
+copy .env.example .env.local    # Windows
 ```
 
 Execução local:
@@ -240,7 +242,17 @@ npm install
 npm run dev
 ```
 
-O token JWT é mantido em memória no módulo `src/services/api.js`, sem uso de `localStorage` ou `sessionStorage`.
+O token JWT é mantido **em memória** no módulo `src/services/api.js`, sem uso de `localStorage` ou `sessionStorage` — a sessão cai ao recarregar a página (comportamento exigido pela seção 6.3 do enunciado v4).
+
+Telas implementadas:
+
+| Tela | Rota | Perfis |
+|---|---|---|
+| Login | `/` | Público |
+| Dashboard gerencial | `/dashboard` | Gerente |
+| Cadastro e listagem de clientes (PF/PJ) | `/clientes` | Atendente / Gerente |
+| Gestão de OS | `/agendamentos` | Atendente / Gerente |
+| Estoque de peças (com filtros e alertas) | `/estoque` | Atendente / Gerente |
 
 ### 10.3 Endpoints principais
 
