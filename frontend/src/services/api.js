@@ -1,47 +1,16 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
-const AUTH_STORAGE_KEY = 'auth_session';
 
 let accessToken = null;
 let refreshToken = null;
 let currentUser = null;
 
-// Carrega sessão do localStorage ao inicializar
-function loadSessionFromStorage() {
-  const stored = localStorage.getItem(AUTH_STORAGE_KEY);
-  if (stored) {
-    try {
-      const auth = JSON.parse(stored);
-      accessToken = auth.token || null;
-      refreshToken = auth.refreshToken || null;
-      currentUser = auth.usuario || null;
-    } catch (e) {
-      console.error('Erro ao carregar sessão armazenada:', e);
-    }
-  }
-}
-
-// Salva sessão no localStorage
-function saveSessionToStorage() {
-  if (accessToken && refreshToken && currentUser) {
-    const auth = { token: accessToken, refreshToken, usuario: currentUser };
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(auth));
-  } else {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-  }
-}
-
 export function setAuthSession(auth) {
   accessToken = auth?.token || null;
   refreshToken = auth?.refreshToken || null;
   currentUser = auth?.usuario || null;
-  saveSessionToStorage();
 }
 
 export function getCurrentUser() {
-  // Se não há usuário em memória, tenta carregar do localStorage
-  if (!currentUser) {
-    loadSessionFromStorage();
-  }
   return currentUser;
 }
 
@@ -49,10 +18,8 @@ export function clearAuthSession() {
   accessToken = null;
   refreshToken = null;
   currentUser = null;
-  localStorage.removeItem(AUTH_STORAGE_KEY);
 }
 
-// Mapeia status HTTP para mensagens amigáveis ao usuário
 function getErrorMessage(status, body) {
   const defaultMessage = body?.message || 'Erro ao comunicar com a API';
 
@@ -72,7 +39,6 @@ function getErrorMessage(status, body) {
   }
 }
 
-// Cria objeto de erro estruturado
 class ApiError extends Error {
   constructor(status, message, body) {
     super(message);
@@ -137,6 +103,5 @@ async function refresh() {
 
   const auth = await response.json();
   setAuthSession(auth);
-  saveSessionToStorage();
   return true;
 }
