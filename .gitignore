@@ -13,9 +13,7 @@ __pycache__/
 *.pyc
 *.pyo
 .pytest_cache/
-.mvn/
-mvnw
-mvnw.cmd
+.mvn/wrapper/maven-wrapper.jar
 
 # Credentials / env
 .env
