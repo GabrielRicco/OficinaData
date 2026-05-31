@@ -1,16 +1,47 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+const AUTH_STORAGE_KEY = 'auth_session';
 
 let accessToken = null;
 let refreshToken = null;
 let currentUser = null;
 
+// Carrega sessão do localStorage ao inicializar
+function loadSessionFromStorage() {
+  const stored = localStorage.getItem(AUTH_STORAGE_KEY);
+  if (stored) {
+    try {
+      const auth = JSON.parse(stored);
+      accessToken = auth.token || null;
+      refreshToken = auth.refreshToken || null;
+      currentUser = auth.usuario || null;
+    } catch (e) {
+      console.error('Erro ao carregar sessão armazenada:', e);
+    }
+  }
+}
+
+// Salva sessão no localStorage
+function saveSessionToStorage() {
+  if (accessToken && refreshToken && currentUser) {
+    const auth = { token: accessToken, refreshToken, usuario: currentUser };
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(auth));
+  } else {
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+  }
+}
+
 export function setAuthSession(auth) {
   accessToken = auth?.token || null;
   refreshToken = auth?.refreshToken || null;
   currentUser = auth?.usuario || null;
+  saveSessionToStorage();
 }
 
 export function getCurrentUser() {
+  // Se não há usuário em memória, tenta carregar do localStorage
+  if (!currentUser) {
+    loadSessionFromStorage();
+  }
   return currentUser;
 }
 
@@ -18,6 +49,37 @@ export function clearAuthSession() {
   accessToken = null;
   refreshToken = null;
   currentUser = null;
+  localStorage.removeItem(AUTH_STORAGE_KEY);
+}
+
+// Mapeia status HTTP para mensagens amigáveis ao usuário
+function getErrorMessage(status, body) {
+  const defaultMessage = body?.message || 'Erro ao comunicar com a API';
+
+  switch (status) {
+    case 400:
+      return body?.message || 'Dados inválidos. Verifique os campos do formulário.';
+    case 401:
+      return body?.message || 'Sua sessão expirou. Faça login novamente.';
+    case 403:
+      return body?.message || 'Você não tem permissão para acessar este recurso.';
+    case 404:
+      return body?.message || 'Recurso não encontrado.';
+    case 500:
+      return body?.message || 'Erro no servidor. Tente novamente mais tarde.';
+    default:
+      return defaultMessage;
+  }
+}
+
+// Cria objeto de erro estruturado
+class ApiError extends Error {
+  constructor(status, message, body) {
+    super(message);
+    this.status = status;
+    this.statusText = body?.statusText || '';
+    this.errors = body?.errors || null;
+  }
 }
 
 export async function apiFetch(path, options = {}) {
@@ -43,14 +105,15 @@ export async function apiFetch(path, options = {}) {
   }
 
   if (!response.ok) {
-    let message = 'Erro ao comunicar com a API';
+    let body = {};
     try {
-      const body = await response.json();
-      message = body.message || message;
+      body = await response.json();
     } catch {
-      message = response.statusText || message;
+      body = { message: response.statusText };
     }
-    throw new Error(message);
+
+    const message = getErrorMessage(response.status, body);
+    throw new ApiError(response.status, message, body);
   }
 
   if (response.status === 204) {
@@ -72,6 +135,8 @@ async function refresh() {
     return false;
   }
 
-  setAuthSession(await response.json());
+  const auth = await response.json();
+  setAuthSession(auth);
+  saveSessionToStorage();
   return true;
 }

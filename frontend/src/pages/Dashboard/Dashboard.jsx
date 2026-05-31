@@ -9,8 +9,8 @@ function Dashboard() {
   const [metricas, setMetricas] = useState({
     faturamentoMensal: 'R$ 0,00',
     ticketMedio: '0.00',
-    carrosAgendados: 0,
-    osConcluidas: 0
+    osAbertas: 0,
+    pecasEmAlerta: 0
   });
   const [erro, setErro] = useState('');
   const navigate = useNavigate();
@@ -23,8 +23,8 @@ function Dashboard() {
         setMetricas({
           faturamentoMensal: Number(dashboard.receitaDia || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
           ticketMedio: dashboard.notaMedia,
-          carrosAgendados: dashboard.osAbertas,
-          osConcluidas: dashboard.pecasEmAlerta
+          osAbertas: dashboard.osAbertas,
+          pecasEmAlerta: dashboard.pecasEmAlerta
         });
         setUltimosAgendamentos(pagina.content || []);
       })
@@ -57,18 +57,18 @@ function Dashboard() {
         </div>
 
         <div className="metric-card">
+          <p className="title">OS Abertas</p>
+          <p className="number" style={{ color: '#0284c7' }}>{metricas.osAbertas}</p>
+        </div>
+
+        <div className="metric-card">
+          <p className="title">Peças em Alerta</p>
+          <p className="number" style={{ color: '#f59e0b' }}>{metricas.pecasEmAlerta}</p>
+        </div>
+
+        <div className="metric-card">
           <p className="title">Nota Média</p>
           <p className="number">{metricas.ticketMedio}</p>
-        </div>
-
-        <div className="metric-card">
-          <p className="title">Peças em alerta</p>
-          <p className="number">{metricas.osConcluidas}</p>
-        </div>
-
-        <div className="metric-card">
-          <p className="title">Veículos Pátio / Agendados</p>
-          <p className="number" style={{ color: '#0284c7' }}>{metricas.carrosAgendados}</p>
         </div>
       </div>
 

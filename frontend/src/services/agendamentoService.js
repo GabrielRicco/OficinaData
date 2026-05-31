@@ -7,6 +7,10 @@ export function listarAgendamentos({ status = '', data = '', page = 0, size = 10
   return apiFetch(`/agendamentos?${params.toString()}`);
 }
 
+export function detalharAgendamento(id) {
+  return apiFetch(`/agendamentos/${id}`);
+}
+
 export function abrirAgendamento(payload) {
   return apiFetch('/agendamentos', {
     method: 'POST',

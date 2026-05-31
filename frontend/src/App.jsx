@@ -4,17 +4,21 @@ import Login from './pages/Login/Login.jsx';
 import Agendamentos from './pages/Agendamentos/Agendamentos.jsx';
 import Clientes from './pages/Clientes/Clientes.jsx';
 import Dashboard from './pages/Dashboard/Dashboard.jsx';
-import { getCurrentUser } from './services/api.js';
+import { NotFound } from './pages/NotFound.jsx';
+import { AccessDenied } from './components/AccessDenied.jsx';
+import { useAuth } from './hooks/useAuth.js';
 
-function RequireAuth({ children, roles }) {
-  const user = getCurrentUser();
+function ProtectedRoute({ children, requiredRoles }) {
+  const { isAuthenticated, user } = useAuth();
 
-  if (!user) {
+  // Usuário não autenticado: redireciona para login
+  if (!isAuthenticated) {
     return <Navigate to="/" replace />;
   }
 
-  if (roles && !roles.includes(user.perfil)) {
-    return <Navigate to="/agendamentos" replace />;
+  // Usuário autenticado mas sem role necessário: mostra tela de acesso negado
+  if (requiredRoles && !requiredRoles.includes(user?.perfil)) {
+    return <AccessDenied />;
   }
 
   return children;
@@ -24,13 +28,27 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Caminho inicial padrão */}
+        {/* Rota pública: Login */}
         <Route path="/" element={<Login />} />
         
-        {/* Outros caminhos do sistema */}
-        <Route path="/agendamentos" element={<RequireAuth><Agendamentos /></RequireAuth>} />
-        <Route path="/clientes" element={<RequireAuth><Clientes /></RequireAuth>} />
-        <Route path="/dashboard" element={<RequireAuth roles={['GERENTE']}><Dashboard /></RequireAuth>} />
+        {/* Rotas protegidas: qualquer usuário autenticado pode acessar */}
+        <Route 
+          path="/agendamentos" 
+          element={<ProtectedRoute><Agendamentos /></ProtectedRoute>} 
+        />
+        <Route 
+          path="/clientes" 
+          element={<ProtectedRoute><Clientes /></ProtectedRoute>} 
+        />
+
+        {/* Rota protegida: apenas GERENTE pode acessar */}
+        <Route 
+          path="/dashboard" 
+          element={<ProtectedRoute requiredRoles={['GERENTE']}><Dashboard /></ProtectedRoute>} 
+        />
+
+        {/* Rota 404: qualquer caminho não encontrado */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );
