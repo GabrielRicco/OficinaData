@@ -4,6 +4,7 @@ import Login from './pages/Login/Login.jsx';
 import Agendamentos from './pages/Agendamentos/Agendamentos.jsx';
 import Clientes from './pages/Clientes/Clientes.jsx';
 import Dashboard from './pages/Dashboard/Dashboard.jsx';
+import Estoque from './pages/Estoque/Estoque.jsx';
 import { NotFound } from './pages/NotFound.jsx';
 import { AccessDenied } from './components/AccessDenied.jsx';
 import { useAuth } from './hooks/useAuth.js';
@@ -36,9 +37,13 @@ function App() {
           path="/agendamentos" 
           element={<ProtectedRoute><Agendamentos /></ProtectedRoute>} 
         />
-        <Route 
-          path="/clientes" 
-          element={<ProtectedRoute><Clientes /></ProtectedRoute>} 
+        <Route
+          path="/clientes"
+          element={<ProtectedRoute><Clientes /></ProtectedRoute>}
+        />
+        <Route
+          path="/estoque"
+          element={<ProtectedRoute><Estoque /></ProtectedRoute>}
         />
 
         {/* Rota protegida: apenas GERENTE pode acessar */}

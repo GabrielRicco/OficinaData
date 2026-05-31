@@ -61,7 +61,15 @@ function Dashboard() {
           <p className="number" style={{ color: '#0284c7' }}>{metricas.osAbertas}</p>
         </div>
 
-        <div className="metric-card">
+        <div
+          className="metric-card"
+          onClick={() => navigate('/estoque')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/estoque')}
+          style={{ cursor: 'pointer' }}
+          title="Ver estoque completo de peças"
+        >
           <p className="title">Peças em Alerta</p>
           <p className="number" style={{ color: '#f59e0b' }}>{metricas.pecasEmAlerta}</p>
         </div>
