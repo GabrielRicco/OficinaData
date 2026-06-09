@@ -1,0 +1,205 @@
+.cont-page { padding: 48px; }
+
+.cont-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.cont-badge {
+  display: inline-block;
+  background: rgba(224,123,42,.15);
+  color: var(--orange);
+  border: 1px solid rgba(224,123,42,.3);
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.cont-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.cont-header p { color: var(--muted); font-size: 0.95rem; }
+
+/* Layout two-column */
+.cont-layout {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* Info cards */
+.cont-info { display: flex; flex-direction: column; gap: 12px; }
+
+.cont-info-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 18px;
+}
+
+.cont-info-icon {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  background: rgba(224,123,42,.15);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cont-info-icon svg { width: 18px; height: 18px; color: var(--orange); }
+
+.cont-info-card h4 { font-size: 0.88rem; font-weight: 600; margin-bottom: 4px; }
+.cont-info-card p  { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+
+/* Hours */
+.cont-hours {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 18px;
+}
+
+.cont-hours-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.cont-hours-header svg { width: 18px; height: 18px; color: var(--orange); }
+.cont-hours-header h4 { font-size: 0.88rem; font-weight: 600; }
+
+.cont-hours-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  color: var(--muted);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.cont-hours-row:last-child { border-bottom: none; }
+.cont-hours-row span:first-child { color: var(--text); }
+.cont-closed { color: #666 !important; }
+
+/* Form */
+.cont-form-wrap {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 36px 32px;
+}
+
+.cont-form h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.cont-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.cont-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.cont-field label {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.cont-field input,
+.cont-field select,
+.cont-field textarea {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color .15s;
+  font-family: inherit;
+  resize: vertical;
+}
+.cont-field input:focus,
+.cont-field select:focus,
+.cont-field textarea:focus { border-color: var(--orange); }
+.cont-field input::placeholder,
+.cont-field textarea::placeholder { color: #555; }
+.cont-field select option { background: var(--bg2); }
+
+.cont-submit {
+  width: 100%;
+  background: var(--orange);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 13px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: background .15s;
+}
+.cont-submit:hover { background: var(--orange2); }
+
+/* Success state */
+.cont-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px 20px;
+  gap: 12px;
+}
+
+.cont-success-icon {
+  width: 56px;
+  height: 56px;
+  background: rgba(34,197,94,.15);
+  border: 2px solid rgba(34,197,94,.4);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  color: #22c55e;
+  margin-bottom: 8px;
+}
+
+.cont-success h3 { font-size: 1.2rem; font-weight: 700; }
+.cont-success p { color: var(--muted); font-size: 0.9rem; }
+
+.cont-reset-btn {
+  margin-top: 8px;
+  background: transparent;
+  border: 1.5px solid var(--orange);
+  color: var(--orange);
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.cont-reset-btn:hover { background: var(--orange); color: #fff; }

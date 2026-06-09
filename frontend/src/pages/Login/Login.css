@@ -1,59 +1,175 @@
-.login-container {
-  height: 100vh;
+/* Hero */
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  padding: 32px 48px;
+}
+
+.hero-left {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 48px 40px;
   display: flex;
+  flex-direction: column;
   justify-content: center;
+}
+
+.hero-left h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 16px;
+}
+
+.hero-left p {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 32px;
+  max-width: 380px;
+}
+
+.hero-btn {
+  display: inline-flex;
   align-items: center;
-  background-color: #f5f5f5;
-  font-family: sans-serif;
-}
-
-.login-card {
-  background: #fff;
-  padding: 30px;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  width: 320px;
-}
-
-.login-title {
-  text-align: center;
-  color: #333;
-  margin-bottom: 20px;
-}
-
-.form-group {
-  margin-bottom: 15px;
-}
-
-.form-group-last {
-  margin-bottom: 20px;
-}
-
-.form-label {
-  display: block;
-  margin-bottom: 5px;
-  color: #666;
-}
-
-.form-input {
-  width: 100%;
-  padding: 10px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  box-sizing: border-box;
-}
-
-.btn-submit {
-  width: 100%;
-  padding: 12px;
-  background-color: #1a73e8;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  font-weight: bold;
+  gap: 8px;
+  background: transparent;
+  border: 1.5px solid var(--text);
+  color: var(--text);
+  padding: 12px 24px;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
+  width: fit-content;
+  text-decoration: none;
+  transition: border-color .15s, color .15s;
+}
+.hero-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+.hero-right {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
 }
 
-.btn-submit:hover {
-  background-color: #1557b0;
+.hero-right svg {
+  width: 180px;
+  height: 120px;
+  color: var(--orange);
+  opacity: 0.85;
 }
+
+/* Services */
+.services {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 0 48px 32px;
+}
+
+.service-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 20px;
+  transition: border-color .2s;
+}
+.service-card:hover { border-color: var(--orange); }
+
+.service-card svg {
+  width: 28px;
+  height: 28px;
+  color: var(--orange);
+  margin-bottom: 12px;
+}
+
+.service-card h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.service-card p {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+/* Bottom row */
+.bottom-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  padding: 0 48px 48px;
+  align-items: center;
+}
+
+.stats {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 40px;
+  display: flex;
+  gap: 48px;
+  align-items: center;
+}
+
+.stat-item { text-align: center; }
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--orange);
+  display: block;
+}
+
+.stat-label {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.whatsapp-card {
+  background: var(--orange);
+  border-radius: var(--radius);
+  padding: 28px 32px;
+  text-align: center;
+  min-width: 220px;
+}
+
+.whatsapp-card h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #fff;
+}
+
+.whatsapp-card p {
+  font-size: 0.82rem;
+  color: rgba(255,255,255,.8);
+  margin-bottom: 18px;
+}
+
+.whatsapp-btn {
+  display: block;
+  background: #fff;
+  color: var(--orange);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  text-decoration: none;
+  text-align: center;
+  transition: opacity .15s;
+}
+.whatsapp-btn:hover { opacity: .85; }
