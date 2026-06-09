@@ -7,6 +7,7 @@ import Sobre from './pages/Sobre/Sobre.jsx';
 import Contato from './pages/Contato/Contato.jsx';
 import Agendamento from './pages/Agendamento/Agendamento.jsx';
 import Agendamentos from './pages/Agendamentos/Agendamentos.jsx';
+import NovaOS from './pages/NovaOS/NovaOS.jsx';
 import Clientes from './pages/Clientes/Clientes.jsx';
 import Dashboard from './pages/Dashboard/Dashboard.jsx';
 import Estoque from './pages/Estoque/Estoque.jsx';
@@ -43,9 +44,13 @@ function App() {
         <Route path="/agendamento" element={<Agendamento />} />
         
         {/* Rotas protegidas: qualquer usuário autenticado pode acessar */}
-        <Route 
-          path="/agendamentos" 
-          element={<ProtectedRoute><Agendamentos /></ProtectedRoute>} 
+        <Route
+          path="/agendamentos"
+          element={<ProtectedRoute><Agendamentos /></ProtectedRoute>}
+        />
+        <Route
+          path="/agendamentos/nova"
+          element={<ProtectedRoute><NovaOS /></ProtectedRoute>}
         />
         <Route
           path="/clientes"

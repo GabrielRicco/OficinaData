@@ -20,3 +20,7 @@ export function listarClientes({ nome = '', tipo = '', page = 0, size = 10 } = {
   if (tipo) params.set('tipo', tipo);
   return apiFetch(`/clientes?${params.toString()}`);
 }
+
+export function listarVeiculosDoCliente(clienteId) {
+  return apiFetch(`/clientes/${clienteId}/veiculos`);
+}

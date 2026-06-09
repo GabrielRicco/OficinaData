@@ -4,6 +4,7 @@ import br.edu.oficinadata.dto.ApiDtos.*;
 import br.edu.oficinadata.entity.*;
 import br.edu.oficinadata.exception.ApiException;
 import br.edu.oficinadata.repository.*;
+import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -23,11 +24,12 @@ public class OficinaService {
     private final ItemPecaRepository itensPeca;
     private final PagamentoRepository pagamentos;
     private final AvaliacaoRepository avaliacoes;
+    private final EntityManager entityManager;
 
     public OficinaService(ClienteRepository clientes, VeiculoRepository veiculos, AgendamentoRepository agendamentos,
                           TipoServicoRepository tiposServico, FuncionarioRepository funcionarios, PecaRepository pecas,
                           ItemServicoRepository itensServico, ItemPecaRepository itensPeca,
-                          PagamentoRepository pagamentos, AvaliacaoRepository avaliacoes) {
+                          PagamentoRepository pagamentos, AvaliacaoRepository avaliacoes, EntityManager entityManager) {
         this.clientes = clientes;
         this.veiculos = veiculos;
         this.agendamentos = agendamentos;
@@ -38,6 +40,7 @@ public class OficinaService {
         this.itensPeca = itensPeca;
         this.pagamentos = pagamentos;
         this.avaliacoes = avaliacoes;
+        this.entityManager = entityManager;
     }
 
     @Transactional
@@ -88,7 +91,10 @@ public class OficinaService {
         agendamento.veiculo = veiculos.findById(request.veiculoId()).orElseThrow(() -> ApiException.notFound("Veiculo nao encontrado"));
         agendamento.status = "Agendado";
         agendamento.kmEntrada = request.kmEntrada();
-        return toAgendamentoResponse(agendamentos.save(agendamento));
+        Agendamento salvo = agendamentos.save(agendamento);
+        agendamentos.flush();
+        entityManager.clear();
+        return toAgendamentoResponse(getAgendamento(salvo.id));
     }
 
     @Transactional
@@ -145,6 +151,7 @@ public class OficinaService {
         item.desconto = request.desconto() == null ? BigDecimal.ZERO : request.desconto();
         itensServico.save(item);
         agendamentos.flush();
+        entityManager.clear();
         return toAgendamentoResponse(getAgendamento(agendamentoId));
     }
 
@@ -164,6 +171,7 @@ public class OficinaService {
         item.desconto = request.desconto() == null ? BigDecimal.ZERO : request.desconto();
         itensPeca.save(item);
         agendamentos.flush();
+        entityManager.clear();
         return toAgendamentoResponse(getAgendamento(agendamentoId));
     }
 
@@ -235,7 +243,7 @@ public class OficinaService {
     }
 
     private Agendamento getAgendamento(Integer id) {
-        return agendamentos.findById(id).orElseThrow(() -> ApiException.notFound("Agendamento nao encontrado"));
+        return agendamentos.findDetalhadoById(id).orElseThrow(() -> ApiException.notFound("Agendamento nao encontrado"));
     }
 
     private void aplicarCliente(Cliente cliente, ClienteRequest request) {

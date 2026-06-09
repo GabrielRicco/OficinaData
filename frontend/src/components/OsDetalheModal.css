@@ -1,0 +1,43 @@
+.osd-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.osd-section-head h3 { margin: 0; }
+
+.osd-form {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 14px;
+  background: rgba(255,255,255,.02);
+}
+.osd-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+.osd-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.osd-field-wide { grid-column: span 2; }
+.osd-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+.osd-vazio { color: var(--muted); font-size: 0.85rem; font-style: italic; }
+
+.osd-status-row { display: flex; gap: 10px; align-items: center; }
+.osd-status-row .sys-select { max-width: 220px; }
+
+@media (max-width: 560px) {
+  .osd-field-wide { grid-column: span 1; }
+}

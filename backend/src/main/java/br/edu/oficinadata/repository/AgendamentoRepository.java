@@ -4,11 +4,16 @@ import br.edu.oficinadata.entity.Agendamento;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Optional;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
 public interface AgendamentoRepository extends JpaRepository<Agendamento, Integer> {
+
+    @Query("select a from Agendamento a join fetch a.veiculo v join fetch v.cliente where a.id = :id")
+    Optional<Agendamento> findDetalhadoById(@Param("id") Integer id);
+
     @Query(value = """
         select a.* from oficina.agendamento a
         where (:status is null or a.status = :status)

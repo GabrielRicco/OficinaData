@@ -24,3 +24,31 @@ export function atualizarStatus(id, payload) {
     body: JSON.stringify(payload)
   });
 }
+
+export function adicionarServico(id, payload) {
+  return apiFetch(`/agendamentos/${id}/itens-servico`, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+export function adicionarPeca(id, payload) {
+  return apiFetch(`/agendamentos/${id}/itens-peca`, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+export function registrarPagamento(id, payload) {
+  return apiFetch(`/agendamentos/${id}/pagamento`, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+export function registrarAvaliacao(id, payload) {
+  return apiFetch(`/agendamentos/${id}/avaliacao`, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
