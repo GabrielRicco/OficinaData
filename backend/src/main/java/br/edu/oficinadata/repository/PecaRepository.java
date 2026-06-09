@@ -9,8 +9,8 @@ import org.springframework.data.repository.query.Param;
 public interface PecaRepository extends JpaRepository<Peca, Integer> {
     @Query("""
         select p from Peca p
-        where (:nome is null or lower(p.nome) like lower(concat('%', :nome, '%')))
-          and (:fornecedor is null or lower(p.fornecedor) like lower(concat('%', :fornecedor, '%')))
+        where (:nome is null or lower(p.nome) like lower(concat('%', cast(:nome as string), '%')))
+          and (:fornecedor is null or lower(p.fornecedor) like lower(concat('%', cast(:fornecedor as string), '%')))
           and (:precoMin is null or p.precoUnitario >= :precoMin)
           and (:precoMax is null or p.precoUnitario <= :precoMax)
         """)

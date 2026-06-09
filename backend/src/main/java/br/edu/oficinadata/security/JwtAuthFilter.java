@@ -1,6 +1,7 @@
 package br.edu.oficinadata.security;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import java.io.IOException;

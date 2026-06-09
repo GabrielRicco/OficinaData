@@ -107,7 +107,9 @@ public class OficinaService {
 
     @Transactional(readOnly = true)
     public Page<AgendamentoResumo> listarAgendamentos(String status, java.time.LocalDate data, Pageable pageable) {
-        return agendamentos.buscar(status, data, pageable).map(this::toAgendamentoResumo);
+        return agendamentos.buscarResumos(status, data, pageable).map(p ->
+                new AgendamentoResumo(p.getId(), p.getCliente(), p.getVeiculo(), p.getPlaca(), p.getStatus(),
+                        toOffsetDateTime(p.getDataAbertura()), toOffsetDateTime(p.getDataConclusao()), p.getTotalGeral()));
     }
 
     @Transactional(readOnly = true)
@@ -307,5 +309,9 @@ public class OficinaService {
 
     private String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value;
+    }
+
+    private OffsetDateTime toOffsetDateTime(java.time.Instant instant) {
+        return instant == null ? null : instant.atOffset(java.time.ZoneOffset.UTC);
     }
 }

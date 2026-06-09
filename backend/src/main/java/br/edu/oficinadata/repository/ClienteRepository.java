@@ -12,7 +12,7 @@ public interface ClienteRepository extends JpaRepository<Cliente, Integer> {
 
     @Query("""
         select c from Cliente c
-        where (:nome is null or lower(c.nome) like lower(concat('%', :nome, '%')))
+        where (:nome is null or lower(c.nome) like lower(concat('%', cast(:nome as string), '%')))
           and (:tipo is null or (:tipo = 'PF' and c.cpf is not null) or (:tipo = 'PJ' and c.cnpj is not null))
         """)
     Page<Cliente> buscar(@Param("nome") String nome, @Param("tipo") String tipo, Pageable pageable);

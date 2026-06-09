@@ -6,11 +6,15 @@ import java.util.Map;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.*;
 import org.springframework.security.access.AccessDeniedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     @ExceptionHandler(ApiException.class)
     ResponseEntity<Map<String, Object>> api(ApiException ex, HttpServletRequest request) {
         return erro(ex.status, ex.getMessage(), request.getRequestURI());
@@ -36,6 +40,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     ResponseEntity<Map<String, Object>> generic(Exception ex, HttpServletRequest request) {
+        log.error("Erro interno em {}", request.getRequestURI(), ex);
         return erro(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno da aplicacao", request.getRequestURI());
     }
 

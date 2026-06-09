@@ -1,214 +1,162 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import SystemLayout from '../../components/SystemLayout';
+import { SkeletonTable } from '../../components/Skeleton';
+import { useToast } from '../../components/Toast';
 import { listarPecas, listarPecasAbaixoMinimo } from '../../services/pecasService';
-import { useAuth } from '../../hooks/useAuth';
 import './Estoque.css';
 
 const PAGE_SIZE = 20;
+const moeda = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-function Estoque() {
-  const navigate = useNavigate();
-  const { hasRole } = useAuth();
+export default function Estoque() {
+  const toast = useToast();
+  const [filtros, setFiltros]   = useState({ nome: '', fornecedor: '', precoMin: '', precoMax: '' });
+  const [filtrosApl, setFApls]  = useState({});
+  const [pagina, setPagina]     = useState({ content: [], number: 0, totalPages: 0, totalElements: 0 });
+  const [pageIdx, setPageIdx]   = useState(0);
+  const [alertas, setAlertas]   = useState([]);
+  const [carregando, setCarr]   = useState(true);
 
-  const [filtros, setFiltros] = useState({ nome: '', fornecedor: '', precoMin: '', precoMax: '' });
-  const [filtrosAplicados, setFiltrosAplicados] = useState({});
-  const [pagina, setPagina] = useState({ content: [], number: 0, totalPages: 0, totalElements: 0 });
-  const [pageIndex, setPageIndex] = useState(0);
-  const [pecasAlerta, setPecasAlerta] = useState([]);
-  const [erro, setErro] = useState('');
-  const [carregando, setCarregando] = useState(false);
-
-  const carregar = (filtrosUsados, page) => {
-    setCarregando(true);
-    setErro('');
-    Promise.all([
-      listarPecas({ ...filtrosUsados, page, size: PAGE_SIZE }),
-      listarPecasAbaixoMinimo()
-    ])
-      .then(([respPagina, respAlerta]) => {
-        setPagina(respPagina || { content: [], number: 0, totalPages: 0, totalElements: 0 });
-        setPecasAlerta(respAlerta || []);
+  const carregar = (f, p) => {
+    setCarr(true);
+    Promise.all([listarPecas({ ...f, page: p, size: PAGE_SIZE }), listarPecasAbaixoMinimo()])
+      .then(([pag, al]) => {
+        setPagina(pag || { content: [], number: 0, totalPages: 0, totalElements: 0 });
+        setAlertas(al || []);
       })
-      .catch((error) => setErro(error.message))
-      .finally(() => setCarregando(false));
+      .catch((e) => toast.error(e.message))
+      .finally(() => setCarr(false));
   };
 
-  useEffect(() => {
-    carregar({}, 0);
-  }, []);
+  useEffect(() => { carregar({}, 0); }, []);
 
-  const aplicarFiltros = (e) => {
+  const aplicar = (e) => {
     e.preventDefault();
-    setPageIndex(0);
-    setFiltrosAplicados(filtros);
-    carregar(filtros, 0);
+    setPageIdx(0); setFApls(filtros); carregar(filtros, 0);
   };
 
-  const limparFiltros = () => {
-    const vazio = { nome: '', fornecedor: '', precoMin: '', precoMax: '' };
-    setFiltros(vazio);
-    setFiltrosAplicados({});
-    setPageIndex(0);
-    carregar({}, 0);
+  const limpar = () => {
+    const v = { nome: '', fornecedor: '', precoMin: '', precoMax: '' };
+    setFiltros(v); setFApls({}); setPageIdx(0); carregar({}, 0);
   };
 
-  const irParaPagina = (novaPagina) => {
-    setPageIndex(novaPagina);
-    carregar(filtrosAplicados, novaPagina);
-  };
+  const irPagina = (p) => { setPageIdx(p); carregar(filtrosApl, p); };
 
-  const moeda = (valor) =>
-    Number(valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-  const idsAlerta = new Set(pecasAlerta.map((p) => p.idPeca));
-  const totalAlerta = pecasAlerta.length;
-  const totalListado = pagina.totalElements ?? 0;
+  const idsAlerta   = new Set(alertas.map((a) => a.idPeca));
+  const totalAlerta = alertas.length;
 
   return (
-    <div className="estoque-container">
-      <div className="estoque-header">
+    <SystemLayout>
+      <div className="sys-page-header">
         <div>
-          <h2>Estoque de Peças</h2>
-          <p>Listagem completa de peças, com destaque para itens abaixo do estoque mínimo.</p>
-        </div>
-        <button
-          type="button"
-          className="btn-voltar"
-          onClick={() => navigate(hasRole('GERENTE') ? '/dashboard' : '/agendamentos')}
-        >
-          Voltar
-        </button>
-      </div>
-
-      <div className="estoque-summary">
-        <div className={`estoque-summary-card ${totalAlerta > 0 ? 'alert' : 'ok'}`}>
-          <p className="label">Peças em alerta</p>
-          <p className="value">{totalAlerta}</p>
-        </div>
-        <div className="estoque-summary-card">
-          <p className="label">Total cadastrado</p>
-          <p className="value">{totalListado}</p>
+          <h1 className="sys-page-title">Estoque de Peças</h1>
+          <p className="sys-page-sub">Itens abaixo do mínimo ficam destacados em alerta.</p>
         </div>
       </div>
 
-      <form className="estoque-filtros" onSubmit={aplicarFiltros}>
-        <div className="filtro-grupo">
-          <label htmlFor="filtro-nome">Nome</label>
-          <input
-            id="filtro-nome"
-            type="text"
-            value={filtros.nome}
-            onChange={(e) => setFiltros({ ...filtros, nome: e.target.value })}
-            placeholder="Ex: Filtro de óleo"
-          />
+      {/* Summary cards */}
+      <div className="est-summary" role="list" aria-label="Resumo do estoque">
+        <div className={`est-summary-card ${totalAlerta > 0 ? 'alert' : ''}`} role="listitem">
+          <p className="est-summary-label">Peças em alerta</p>
+          <p className="est-summary-value" style={{ color: totalAlerta > 0 ? 'var(--warning)' : 'var(--success)' }}>
+            {carregando ? '—' : totalAlerta}
+          </p>
+          {totalAlerta > 0 && <p className="est-summary-hint">Estoque abaixo do mínimo</p>}
         </div>
-        <div className="filtro-grupo">
-          <label htmlFor="filtro-fornecedor">Fornecedor</label>
-          <input
-            id="filtro-fornecedor"
-            type="text"
-            value={filtros.fornecedor}
-            onChange={(e) => setFiltros({ ...filtros, fornecedor: e.target.value })}
-            placeholder="Ex: Bosch"
-          />
+        <div className="est-summary-card" role="listitem">
+          <p className="est-summary-label">Total cadastrado</p>
+          <p className="est-summary-value">{carregando ? '—' : (pagina.totalElements ?? 0)}</p>
         </div>
-        <div className="filtro-grupo">
-          <label htmlFor="filtro-preco-min">Preço mín. (R$)</label>
-          <input
-            id="filtro-preco-min"
-            type="number"
-            step="0.01"
-            min="0"
-            value={filtros.precoMin}
-            onChange={(e) => setFiltros({ ...filtros, precoMin: e.target.value })}
-            placeholder="0,00"
-          />
+      </div>
+
+      {/* Filters */}
+      <form className="sys-filters" onSubmit={aplicar} role="search" aria-label="Filtros de estoque">
+        <div className="sys-filter-group">
+          <label htmlFor="est-nome">Nome</label>
+          <input id="est-nome" className="sys-input" placeholder="Ex: Filtro de óleo"
+            value={filtros.nome} onChange={(e) => setFiltros({ ...filtros, nome: e.target.value })} />
         </div>
-        <div className="filtro-grupo">
-          <label htmlFor="filtro-preco-max">Preço máx. (R$)</label>
-          <input
-            id="filtro-preco-max"
-            type="number"
-            step="0.01"
-            min="0"
-            value={filtros.precoMax}
-            onChange={(e) => setFiltros({ ...filtros, precoMax: e.target.value })}
-            placeholder="9999,99"
-          />
+        <div className="sys-filter-group">
+          <label htmlFor="est-fornecedor">Fornecedor</label>
+          <input id="est-fornecedor" className="sys-input" placeholder="Ex: Bosch"
+            value={filtros.fornecedor} onChange={(e) => setFiltros({ ...filtros, fornecedor: e.target.value })} />
         </div>
-        <div className="filtros-acoes">
-          <button type="submit" className="btn-filtrar" disabled={carregando}>
-            {carregando ? 'Buscando...' : 'Filtrar'}
+        <div className="sys-filter-group est-price-field">
+          <label htmlFor="est-pmin">Preço mín.</label>
+          <input id="est-pmin" className="sys-input" type="number" step="0.01" min="0" placeholder="0,00"
+            value={filtros.precoMin} onChange={(e) => setFiltros({ ...filtros, precoMin: e.target.value })} />
+        </div>
+        <div className="sys-filter-group est-price-field">
+          <label htmlFor="est-pmax">Preço máx.</label>
+          <input id="est-pmax" className="sys-input" type="number" step="0.01" min="0" placeholder="9999,99"
+            value={filtros.precoMax} onChange={(e) => setFiltros({ ...filtros, precoMax: e.target.value })} />
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignSelf: 'flex-end' }}>
+          <button type="submit" className="sys-btn" disabled={carregando}
+            aria-label="Aplicar filtros de estoque">
+            {carregando ? <><span className="sys-btn-spinner" aria-hidden="true" /> Buscando</> : 'Filtrar'}
           </button>
-          <button type="button" className="btn-limpar" onClick={limparFiltros} disabled={carregando}>
-            Limpar
-          </button>
+          <button type="button" className="sys-btn-ghost" onClick={limpar} disabled={carregando}
+            aria-label="Limpar filtros">Limpar</button>
         </div>
       </form>
 
-      {erro && <p className="form-error">{erro}</p>}
-
-      <div className="estoque-tabela-card">
-        <table className="estoque-tabela">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Nome</th>
-              <th>Fornecedor</th>
-              <th>Preço unitário</th>
-              <th>Estoque atual</th>
-              <th>Estoque mínimo</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {pagina.content.length === 0 && !carregando && (
-              <tr>
-                <td colSpan={7} className="estoque-vazio">Nenhuma peça encontrada com os filtros aplicados.</td>
-              </tr>
-            )}
-            {pagina.content.map((peca) => {
-              const emAlerta = idsAlerta.has(peca.id) || peca.quantidadeEstoque < peca.quantidadeMinima;
-              return (
-                <tr key={peca.id} className={emAlerta ? 'row-alerta' : ''}>
-                  <td><strong>#{peca.id}</strong></td>
-                  <td>{peca.nome}</td>
-                  <td>{peca.fornecedor}</td>
-                  <td>{moeda(peca.precoUnitario)}</td>
-                  <td>{peca.quantidadeEstoque}</td>
-                  <td>{peca.quantidadeMinima}</td>
-                  <td>
-                    <span className={`estoque-badge ${emAlerta ? 'alerta' : 'ok'}`}>
-                      {emAlerta ? 'Abaixo do mínimo' : 'OK'}
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {pagina.totalPages > 1 && (
-        <div className="estoque-paginacao">
-          <span className="pag-info">
-            Página {pageIndex + 1} de {pagina.totalPages} · {totalListado} peças
-          </span>
-          <div className="pag-acoes">
-            <button onClick={() => irParaPagina(pageIndex - 1)} disabled={pageIndex === 0 || carregando}>
-              ← Anterior
-            </button>
-            <button
-              onClick={() => irParaPagina(pageIndex + 1)}
-              disabled={pageIndex >= pagina.totalPages - 1 || carregando}
-            >
-              Próxima →
-            </button>
+      {/* Table */}
+      <div className="sys-table-wrap" role="region" aria-label="Estoque de peças" aria-live="polite" aria-busy={carregando}>
+        {carregando ? (
+          <SkeletonTable rows={10} cols={7} />
+        ) : pagina.content.length === 0 ? (
+          <div className="sys-empty">
+            <div className="sys-empty-icon">🔧</div>
+            <p className="sys-empty-title">Nenhuma peça encontrada</p>
+            <p>Tente ajustar os filtros de busca.</p>
           </div>
-        </div>
-      )}
-    </div>
+        ) : (
+          <>
+            <table className="sys-table" aria-label="Lista de peças em estoque">
+              <thead>
+                <tr>
+                  <th scope="col">ID</th><th scope="col">Nome</th><th scope="col">Fornecedor</th>
+                  <th scope="col">Preço Unit.</th><th scope="col">Estoque</th>
+                  <th scope="col">Mínimo</th><th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pagina.content.map((p) => {
+                  const alerta = idsAlerta.has(p.id) || p.quantidadeEstoque < p.quantidadeMinima;
+                  return (
+                    <tr key={p.id} className={alerta ? 'est-row-alerta' : ''}
+                      aria-label={alerta ? `${p.nome} — abaixo do estoque mínimo` : undefined}>
+                      <td><strong>#{p.id}</strong></td>
+                      <td>{p.nome}</td>
+                      <td>{p.fornecedor}</td>
+                      <td>{moeda(p.precoUnitario)}</td>
+                      <td className={alerta ? 'est-qty-alerta' : ''}>{p.quantidadeEstoque}</td>
+                      <td>{p.quantidadeMinima}</td>
+                      <td>
+                        <span className={`sys-badge ${alerta ? 'cancelado' : 'concluido'}`}
+                          aria-label={alerta ? 'Abaixo do mínimo' : 'Estoque OK'}>
+                          {alerta ? 'Abaixo do mínimo' : 'OK'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+
+            {pagina.totalPages > 1 && (
+              <div className="sys-pagination" role="navigation" aria-label="Paginação do estoque">
+                <button className="sys-btn-ghost" onClick={() => irPagina(pageIdx - 1)}
+                  disabled={pageIdx === 0 || carregando} aria-label="Página anterior">← Anterior</button>
+                <span aria-live="polite">Página {pageIdx + 1} de {pagina.totalPages} · {pagina.totalElements} peças</span>
+                <button className="sys-btn-ghost" onClick={() => irPagina(pageIdx + 1)}
+                  disabled={pageIdx >= pagina.totalPages - 1 || carregando} aria-label="Próxima página">Próxima →</button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </SystemLayout>
   );
 }
-
-export default Estoque;
