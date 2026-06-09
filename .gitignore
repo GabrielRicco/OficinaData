@@ -9,6 +9,7 @@ build/
 dist/
 out/
 node_modules/
+backend/src/main/resources/static/
 __pycache__/
 *.pyc
 *.pyo

@@ -1,0 +1,19 @@
+# Diretorios pesados / gerados (serao reconstruidos no build)
+**/node_modules
+**/target
+**/dist
+backend/src/main/resources/static
+
+# Ambiente local e artefatos
+**/.env.local
+.git
+.idea
+.vscode
+*.iml
+
+# Scripts e docs que nao entram na imagem
+iniciar.ps1
+iniciar.bat
+parar.ps1
+parar.bat
+*.pdf
